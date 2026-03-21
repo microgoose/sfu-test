@@ -28,18 +28,3 @@
     display: flex;
     justify-content: flex-end;
 }
-
-@media (max-width: 640px) {
-    .preview-page {
-        align-items: stretch;
-    }
-
-    .preview-actions {
-        justify-content: stretch;
-    }
-
-    .preview-actions .terminal-button {
-        width: 100%;
-        text-align: center;
-    }
-}

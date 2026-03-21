@@ -1,5 +1,5 @@
 import {getRoomList} from "../../js/api/rooms-api.js";
-import {renderRooms} from "../../js/render/rooms-renderers.js";
+import {renderRooms} from "./rooms-renderers.js";
 
 const roomsListEl = document.getElementById("rooms-list");
 
