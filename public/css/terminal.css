@@ -1,0 +1,122 @@
+:root {
+    --terminal-bg: #0b0f3f;
+    --terminal-panel: #1026a3;
+    --terminal-panel-dark: #0b1d7a;
+    --terminal-border: #c7d4ff;
+    --terminal-text: #e6ecff;
+    --terminal-muted: #9fb0f5;
+    --terminal-accent: #ffd75f;
+    --terminal-shadow: rgba(0, 0, 0, 0.4);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    color-scheme: dark;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02)),
+    var(--terminal-bg);
+    color: var(--terminal-text);
+    font: 16px/1.5 "Consolas",
+    "Lucida Console",
+    "Courier New",
+    monospace;
+}
+
+a {
+    color: inherit;
+}
+
+.page {
+    width: min(960px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 48px;
+}
+
+.terminal-shell {
+    background: var(--terminal-panel);
+    border: 2px solid var(--terminal-border);
+    box-shadow: 8px 8px 0 var(--terminal-shadow);
+}
+
+.terminal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    border-bottom: 2px solid var(--terminal-border);
+    background: var(--terminal-panel-dark);
+}
+
+.terminal-title {
+    margin: 0;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--terminal-accent);
+}
+
+.terminal-subtitle {
+    color: var(--terminal-muted);
+    font-size: 0.875rem;
+}
+
+.terminal-body {
+    padding: 18px;
+}
+
+.terminal-list {
+    display: grid;
+    gap: 12px;
+}
+
+.terminal-card {
+    padding: 14px 16px;
+    border: 1px solid var(--terminal-border);
+    background: rgba(42, 52, 114, 0.18);
+}
+
+.terminal-card-title {
+    margin: 0 0 6px;
+    color: var(--terminal-accent);
+    font-size: 1rem;
+}
+
+.terminal-card-text {
+    margin: 0;
+    color: var(--terminal-muted);
+    font-size: 0.875rem;
+}
+
+.terminal-card-actions {
+    margin-top: 12px;
+}
+
+.terminal-button {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 1px solid var(--terminal-border);
+    background: var(--terminal-accent);
+    color: #24305f;
+    text-decoration: none;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.terminal-button:hover {
+    filter: brightness(1.03);
+}
+
+.terminal-empty {
+    padding: 20px 16px;
+    border: 1px dashed var(--terminal-border);
+    color: var(--terminal-muted);
+}
