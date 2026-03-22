@@ -1,4 +1,4 @@
-import { Router } from "express";
+import {Router} from "express";
 import * as roomService from "../services/rooms-service.js";
 
 export const roomRouter = Router()

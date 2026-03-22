@@ -1,6 +1,6 @@
 import express from "express";
-import { HTTP_PORT } from "./src/config/server-config.js";
-import { roomRouter } from "./src/routes/room-router.js";
+import {HTTP_PORT} from "./src/config/server-config.js";
+import {roomRouter} from "./src/routes/room-router.js";
 import {pageRouter} from "./src/routes/page-router.js";
 import {createRoom} from "./src/services/rooms-service.js";
 

@@ -1,3 +1,9 @@
+#hidden-canvas {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+}
+
 .room-video-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, 300px);

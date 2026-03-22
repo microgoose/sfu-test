@@ -1,4 +1,4 @@
-import { createRandomBallCanvasAnimation } from "/js/canvas/random-ball-animation.js";
+import {createRandomBallCanvasAnimation} from "/js/canvas/random-ball-animation.js";
 
 const previewCanvas = document.getElementById("preview-canvas");
 const confirmButton = document.getElementById("confirm-button");

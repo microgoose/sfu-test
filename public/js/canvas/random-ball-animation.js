@@ -1,4 +1,14 @@
-export function createRandomBallCanvasAnimation(canvas, options = {}) {
+export const RANDOM_BALL_OPTIONS = {
+    radius: 26,
+    speed: 280,
+    backgroundColor: "#071133",
+    ballColor: "#ffd75f",
+    glowColor: "rgba(255, 215, 95, 0.35)",
+    height: '300px',
+    width: '300px'
+};
+
+export function createRandomBallCanvasAnimation(canvas, options = RANDOM_BALL_OPTIONS) {
     const context = canvas.getContext("2d");
 
     if (!context) {
@@ -8,8 +18,8 @@ export function createRandomBallCanvasAnimation(canvas, options = {}) {
     const state = {
         animationFrameId: null,
         lastTimestamp: 0,
-        width: canvas.width,
-        height: canvas.height,
+        width: canvas.width || options.width,
+        height: canvas.height || options.height,
         ball: {
             radius: options.radius ?? 26,
             x: 0,
@@ -51,8 +61,8 @@ export function createRandomBallCanvasAnimation(canvas, options = {}) {
     }
 
     function resetBallPosition() {
-        const { radius } = state.ball;
-        const { vx, vy } = randomDirection();
+        const {radius} = state.ball;
+        const {vx, vy} = randomDirection();
 
         state.ball.x = state.width / 2;
         state.ball.y = state.height / 2;
@@ -66,7 +76,7 @@ export function createRandomBallCanvasAnimation(canvas, options = {}) {
     }
 
     function reflectIfNeeded() {
-        const { ball, width, height } = state;
+        const {ball, width, height} = state;
 
         if (ball.x <= ball.radius) {
             ball.x = ball.radius;
@@ -142,11 +152,15 @@ export function createRandomBallCanvasAnimation(canvas, options = {}) {
 
     return {
         canvas,
+        start() {
+            window.addEventListener("resize", handleResize);
+            start();
+        },
         stop() {
             stop();
             window.removeEventListener("resize", handleResize);
         },
-        getStream(frameRate = 30) {
+        getStream(frameRate = 60) {
             return canvas.captureStream(frameRate);
         },
     };

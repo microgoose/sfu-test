@@ -1,6 +1,6 @@
 export function createVideoGridRenderer(videoGridEl) {
     return {
-        addVideoSquare({ label = "Video", stream = null, muted = false } = {}) {
+        addVideoSquare({ label = "Video", stream = null, muted = true } = {}) {
             const cardEl = document.createElement("article");
             cardEl.className = "room-video-card";
 
@@ -12,6 +12,11 @@ export function createVideoGridRenderer(videoGridEl) {
 
             if (stream) {
                 videoEl.srcObject = stream;
+                videoEl.addEventListener("loadedmetadata", () => {
+                    videoEl.play().catch((error) => {
+                        console.error("Video play failed:", error);
+                    });
+                });
             }
 
             const labelEl = document.createElement("span");
