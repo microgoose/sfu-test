@@ -1,4 +1,21 @@
+import {randomUUID} from "node:crypto";
+
 export class Participant {
-    id;
-    roomId;
+    constructor() {
+        this.id = randomUUID();
+        this.room = null;
+    }
+
+    joinRoom(room) {
+        this.room = room;
+    }
+
+    leaveRoom() {
+        this.room = null;
+    }
+
+    disconnect() {
+        if (this.room)
+            this.room.removeParticipant(this.id);
+    }
 }

@@ -1,16 +1,12 @@
-import {randomUUID} from "node:crypto";
-
 const map = new Map();
 
 export function save(participant) {
-    const id = participant.id ?? randomUUID();
-    const saved = {
-        ...participant,
-        id
-    };
+    map.set(participant.id, participant);
+    return participant;
+}
 
-    map.set(id, saved);
-    return saved;
+export function remove(participant) {
+    map.delete(participant.id);
 }
 
 export function findById(id) {

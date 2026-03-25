@@ -1,20 +1,22 @@
-import {randomUUID} from "node:crypto";
-
 const map = new Map();
 
 export function save(room) {
-    const id = room.id ?? randomUUID();
-    const saved = {
-        ...room,
-        id
-    };
-
-    map.set(id, saved);
-    return saved;
+    map.set(room.id, room);
+    return room;
 }
 
 export function findById(id) {
     return map.get(id);
+}
+
+export function findByParticipantId(participantId) {
+    const rooms = Array.from(map.values());
+
+    return rooms.find(room => {
+        if (room.hasParticipant(participantId))
+            return room;
+        return null;
+    });
 }
 
 export function findAll() {
