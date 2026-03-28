@@ -6,24 +6,14 @@ export function findConnection(socketId) {
 }
 
 export function addConnection(userId, socket) {
-    if (!connections.has(userId))
-        connections.set(userId, new Set());
-
-    connections.get(userId).add(socket);
+    connections.set(userId, socket);
     socketToConnection.set(socket.id, userId);
 }
 
-export function removeConnection(socket) {
-    const userId = socketToConnection.get(socket.id);
-
-    if (userId) {
-        connections.get(userId)?.delete(socket);
-        if (connections.get(userId)?.size === 0) {
-            connections.delete(userId);
-        }
-    }
-
-    socketToConnection.delete(socket.id);
+export function removeConnection(socketId) {
+    const userId = socketToConnection.get(socketId);
+    connections.delete(userId);
+    socketToConnection.delete(socketId);
 }
 
 export function sendTo(connId, message) {

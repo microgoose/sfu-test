@@ -1,8 +1,9 @@
 import * as participantStorage from "../storage/participant-storage.js";
 import {Participant} from "../model/participant.js";
 import * as wsManager from "../config/ws-manager.js";
-import {broadcastToRoom} from "./rooms-service.js";
-import {MESSAGE_TYPES} from "../config/ws-routes.js";
+import {getBySocketId} from "../infra/websocket/ws-user-service.js";
+import {sendLeftRoom, sendTransportCreated} from "../infra/websocket/ws-room-service.js";
+import {createTransport} from "../infra/mediasoup/ms-transport-service.js";
 
 export function findById(id) {
     console.debug(`Find participant by id ${id}`);
@@ -12,12 +13,9 @@ export function findById(id) {
     return participant;
 }
 
-export function findByRoomId(roomId) {
-    console.debug(`Find participant by id ${id}`);
-    const participant = participantStorage.findById(id);
-    if (!participant)
-        throw new Error(`Participant ${id} not found`);
-    return participant;
+export function findBySocketId(socketId) {
+    const userId = getBySocketId(socketId);
+    return findById(userId);
 }
 
 export function connectParticipant(socket) {
@@ -26,21 +24,23 @@ export function connectParticipant(socket) {
     console.debug("Create participant " + participant.id);
 }
 
-export function disconnectParticipant(socket) {
-    const userId = wsManager.findConnection(socket.id);
-    const participant = participantStorage.findById(userId);
+export function disconnectParticipant(socketId) {
+    const participant = findBySocketId(socketId);
     const room = participant.room;
 
     if (!participant)
         throw new Error(`Participant not found`);
 
-    participant.disconnect();
+    participant.leave();
     participantStorage.remove(participant);
-    wsManager.removeConnection(socket);
-    broadcastToRoom(room, {
-        type: MESSAGE_TYPES.PARTICIPANT_LEFT,
-        participantId: participant.id,
-    });
+    wsManager.removeConnection(socketId);
+    sendLeftRoom(room, participant.id);
 
     console.debug("Remove participant " + participant.id);
+}
+
+export async function setupTransport(socketId) {
+    const participant = findBySocketId(socketId);
+    const params = await createTransport();
+    sendTransportCreated(participant.id, params);
 }

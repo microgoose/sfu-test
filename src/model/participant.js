@@ -14,7 +14,7 @@ export class Participant {
         this.room = null;
     }
 
-    disconnect() {
+    leave() {
         if (this.room)
             this.room.removeParticipant(this.id);
     }

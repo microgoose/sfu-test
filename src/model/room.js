@@ -1,8 +1,9 @@
 import {randomUUID} from "node:crypto";
 
 export class Room {
-    constructor() {
-        this.id = randomUUID();
+    constructor(id, routerId) {
+        this.id = id || randomUUID();
+        this.routerId = routerId || null;
         this.participants = new Map();
     }
 

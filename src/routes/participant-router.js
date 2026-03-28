@@ -1,4 +1,4 @@
-import {connectParticipant, disconnectParticipant} from "../services/participant-service.js";
+import {connectParticipant, disconnectParticipant, setupTransport} from "../services/participant-service.js";
 import {MESSAGE_TYPES} from "../config/ws-routes.js";
 
 export const wsParticipantRoutes = {
@@ -17,6 +17,15 @@ export const wsParticipantRoutes = {
         if (!socket.id)
             throw new Error('Missing socket id');
 
-        disconnectParticipant(socket);
+        disconnectParticipant(socket.id);
+    },
+
+    [MESSAGE_TYPES.CREATE_TRANSPORT]: (socket) => {
+        if (!socket)
+            throw new Error('Missing socket');
+        if (!socket.id)
+            throw new Error('Missing socket id');
+
+        setupTransport(socket.id);
     }
 };
