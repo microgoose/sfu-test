@@ -1,6 +1,6 @@
 import '../assets/css/preview.css';
-import { onCleanup, onMount } from "solid-js";
-import {A, useNavigate, useParams} from "@solidjs/router";
+import {onCleanup, onMount} from "solid-js";
+import {A, useParams} from "@solidjs/router";
 import {createRandomBallCanvasAnimation} from "../service/random-ball-animation";
 
 export const Preview = () => {

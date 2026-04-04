@@ -1,6 +1,6 @@
-import { For, Show } from "solid-js";
-import { RoomCard } from "./room-card";
-import { RoomCardSkeleton } from "./room-card-skeleton";
+import {For, Show} from "solid-js";
+import {RoomCard} from "./room-card";
+import {RoomCardSkeleton} from "./room-card-skeleton";
 
 interface Room {
     id: string | number;

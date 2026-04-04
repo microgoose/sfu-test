@@ -1,4 +1,14 @@
-export const RANDOM_BALL_OPTIONS = {
+export interface RandomBallOptions {
+    radius: number;
+    speed: number;
+    backgroundColor: string;
+    ballColor: string;
+    glowColor: string;
+    height: string;
+    width: string;
+}
+
+export const RANDOM_BALL_OPTIONS: RandomBallOptions = {
     radius: 26,
     speed: 280,
     backgroundColor: "#071133",
@@ -8,14 +18,45 @@ export const RANDOM_BALL_OPTIONS = {
     width: '300px'
 };
 
-export function createRandomBallCanvasAnimation(canvas, options = RANDOM_BALL_OPTIONS) {
+interface BallState {
+    radius: number;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+}
+
+interface AnimationState {
+    animationFrameId: number | null;
+    lastTimestamp: number;
+    width: number | string;
+    height: number | string;
+    ball: BallState;
+}
+
+interface Direction {
+    vx: number;
+    vy: number;
+}
+
+export interface CanvasAnimation {
+    canvas: HTMLCanvasElement;
+    start(): void;
+    stop(): void;
+    getStream(frameRate?: number): MediaStream;
+}
+
+export function createRandomBallCanvasAnimation(
+    canvas: HTMLCanvasElement,
+    options: RandomBallOptions = RANDOM_BALL_OPTIONS
+): CanvasAnimation {
     const context = canvas.getContext("2d");
 
     if (!context) {
         throw new Error("2D canvas context is not available.");
     }
 
-    const state = {
+    const state: AnimationState = {
         animationFrameId: null,
         lastTimestamp: 0,
         width: canvas.width || options.width,
@@ -29,12 +70,12 @@ export function createRandomBallCanvasAnimation(canvas, options = RANDOM_BALL_OP
         },
     };
 
-    const speed = options.speed ?? 280;
-    const backgroundColor = options.backgroundColor ?? "#071133";
-    const ballColor = options.ballColor ?? "#ffd75f";
-    const glowColor = options.glowColor ?? "rgba(255, 215, 95, 0.35)";
+    const speed: number = options.speed ?? 280;
+    const backgroundColor: string = options.backgroundColor ?? "#071133";
+    const ballColor: string = options.ballColor ?? "#ffd75f";
+    const glowColor: string = options.glowColor ?? "rgba(255, 215, 95, 0.35)";
 
-    function resizeCanvas() {
+    function resizeCanvas(): void {
         const rect = canvas.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
         const nextWidth = Math.max(1, Math.round(rect.width * dpr));
@@ -51,7 +92,7 @@ export function createRandomBallCanvasAnimation(canvas, options = RANDOM_BALL_OP
         resetBallPosition();
     }
 
-    function randomDirection() {
+    function randomDirection(): Direction {
         const angle = Math.random() * Math.PI * 2;
 
         return {
@@ -60,50 +101,53 @@ export function createRandomBallCanvasAnimation(canvas, options = RANDOM_BALL_OP
         };
     }
 
-    function resetBallPosition() {
-        const {radius} = state.ball;
-        const {vx, vy} = randomDirection();
+    function resetBallPosition(): void {
+        const { radius } = state.ball;
+        const { vx, vy } = randomDirection();
 
-        state.ball.x = state.width / 2;
-        state.ball.y = state.height / 2;
+        state.ball.x = (state.width as number) / 2;
+        state.ball.y = (state.height as number) / 2;
         state.ball.vx = vx;
         state.ball.vy = vy;
 
-        if (state.width <= radius * 2 || state.height <= radius * 2) {
+        if ((state.width as number) <= radius * 2 || (state.height as number) <= radius * 2) {
             state.ball.x = radius;
             state.ball.y = radius;
         }
     }
 
-    function reflectIfNeeded() {
-        const {ball, width, height} = state;
+    function reflectIfNeeded(): void {
+        const { ball, width, height } = state;
 
         if (ball.x <= ball.radius) {
             ball.x = ball.radius;
             ball.vx = Math.abs(ball.vx);
-        } else if (ball.x >= width - ball.radius) {
-            ball.x = width - ball.radius;
+        } else if (ball.x >= (width as number) - ball.radius) {
+            ball.x = (width as number) - ball.radius;
             ball.vx = -Math.abs(ball.vx);
         }
 
         if (ball.y <= ball.radius) {
             ball.y = ball.radius;
             ball.vy = Math.abs(ball.vy);
-        } else if (ball.y >= height - ball.radius) {
-            ball.y = height - ball.radius;
+        } else if (ball.y >= (height as number) - ball.radius) {
+            ball.y = (height as number) - ball.radius;
             ball.vy = -Math.abs(ball.vy);
         }
     }
 
-    function update(deltaSeconds) {
+    function update(deltaSeconds: number): void {
         state.ball.x += state.ball.vx * deltaSeconds;
         state.ball.y += state.ball.vy * deltaSeconds;
         reflectIfNeeded();
     }
 
-    function draw() {
+    function draw(): void {
+        if (context == null)
+            throw new Error('Context is null');
+
         context.fillStyle = backgroundColor;
-        context.fillRect(0, 0, state.width, state.height);
+        context.fillRect(0, 0, state.width as number, state.height as number);
 
         context.fillStyle = ballColor;
         context.shadowColor = glowColor;
@@ -114,7 +158,7 @@ export function createRandomBallCanvasAnimation(canvas, options = RANDOM_BALL_OP
         context.shadowBlur = 0;
     }
 
-    function animate(timestamp) {
+    function animate(timestamp: number): void {
         if (!state.lastTimestamp) {
             state.lastTimestamp = timestamp;
         }
@@ -128,21 +172,21 @@ export function createRandomBallCanvasAnimation(canvas, options = RANDOM_BALL_OP
         state.animationFrameId = window.requestAnimationFrame(animate);
     }
 
-    function start() {
+    function start(): void {
         resizeCanvas();
         resetBallPosition();
         draw();
         state.animationFrameId = window.requestAnimationFrame(animate);
     }
 
-    function stop() {
+    function stop(): void {
         if (state.animationFrameId !== null) {
             window.cancelAnimationFrame(state.animationFrameId);
             state.animationFrameId = null;
         }
     }
 
-    const handleResize = () => {
+    const handleResize = (): void => {
         resizeCanvas();
         draw();
     };
@@ -160,7 +204,7 @@ export function createRandomBallCanvasAnimation(canvas, options = RANDOM_BALL_OP
             stop();
             window.removeEventListener("resize", handleResize);
         },
-        getStream(frameRate = 60) {
+        getStream(frameRate: number = 60): MediaStream {
             return canvas.captureStream(frameRate);
         },
     };

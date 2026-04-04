@@ -1,4 +1,4 @@
-import { createResource } from "solid-js";
+import {createResource} from "solid-js";
 import {RoomList} from "../components/room-list";
 import {getRoomList} from "../api/rooms-api";
 

@@ -1,18 +1,22 @@
 import '../assets/css/room.css';
-import { For } from "solid-js";
-import { useParams } from "@solidjs/router";
-import { VideoCard } from "../components/video-card";
-import { useRoom } from "../service/user-room";
+import {For} from "solid-js";
+import {useParams} from "@solidjs/router";
+import {VideoCard} from "../components/video-card";
+import {useRoom} from "../service/use-room";
+import {createRandomBallCanvasAnimation} from "../service/random-ball-animation";
 
 export const Room = () => {
     const params = useParams<{ roomId: string }>();
 
     let hiddenCanvasRef!: HTMLCanvasElement;
 
+    // TODO возможность выбора: реальный/эмуляция + аудио
     const { videos } = useRoom({
         roomId: params.roomId,
-        wsUrl: "ws://localhost:8080",
-        getCanvas: () => hiddenCanvasRef,
+        getStream: () => {
+            const anima = createRandomBallCanvasAnimation(hiddenCanvasRef);
+            return anima.getStream();
+        },
     });
 
     return (
