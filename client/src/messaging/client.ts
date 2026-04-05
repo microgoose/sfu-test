@@ -7,7 +7,7 @@ export function getStompClient(): Client {
 
     instance = new Client({
         // TODO
-        brokerURL: 'ws://localhost:8080',
+        brokerURL: 'ws://localhost:8080/ws',
         reconnectDelay: 5000,
         onStompError: (frame) => {
             console.error('[STOMP] Error:', frame.headers.message);

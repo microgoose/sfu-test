@@ -18,8 +18,11 @@ export function useRoom(options: UseRoomOptions) {
 
     onMount(() => {
         const client = getStompClient();
-        client.activate();
+
         client.onConnect = () => {
+            console.debug('Connected');
+            if (subscriptions.length > 0) return;
+
             subscriptions.push(
                 ...setupRoomSubscriptions(mediasoup),
                 ...setupTransportSubscriptions(mediasoup)
@@ -27,12 +30,15 @@ export function useRoom(options: UseRoomOptions) {
 
             roomPublisher.join({roomId});
         };
-    });
 
-    onCleanup(() => {
-        subscriptions.forEach(sub => sub.unsubscribe());
-        roomPublisher.leave({roomId});
-        getStompClient().deactivate();
+        client.activate();
+
+        onCleanup(() => {
+            subscriptions.forEach(sub => sub.unsubscribe());
+            subscriptions.length = 0;
+            roomPublisher.leave({roomId});
+            getStompClient().deactivate();
+        });
     });
 
     return {
@@ -43,10 +49,10 @@ export function useRoom(options: UseRoomOptions) {
 function setupRoomSubscriptions(mediasoup: MediasoupHook) {
     return subscribeToRoom({
         onParticipantJoined: (participantId) => {
-            console.log('Participant joined:', participantId);
+            console.debug('Participant joined:', participantId);
         },
         onParticipantLeft: (participantId) => {
-            console.log('Participant left:', participantId);
+            console.debug('Participant left:', participantId);
         },
         onRtpCapabilities: mediasoup.handleRtpCapabilities,
     });

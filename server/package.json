@@ -1,16 +1,25 @@
 {
-  "name": "sfu-test-server",
+  "name": "sfu-server",
   "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
   "type": "module",
-  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
   "dependencies": {
-    "cors": "^2.8.6",
+    "cors": "^2.8.5",
     "express": "^5.2.1",
     "mediasoup": "^3.19.18",
-    "mediasoup-client": "^3.18.7",
+    "stomp-protocol": "^0.4.7",
     "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.14",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
   }
 }
