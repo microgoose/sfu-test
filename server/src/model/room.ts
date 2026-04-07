@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto';
-import { Participant } from './participant.ts';
+import {randomUUID} from 'node:crypto';
+import {Participant} from './participant.ts';
 
 export class Room {
     readonly id: string;

@@ -30,3 +30,27 @@ export function subscribe<T>(topic: string, callback: (msg: T) => void) {
         callback(msg);
     });
 }
+
+export function pendingSubscription<T>(topic: string, timeoutMs = 5000) {
+    return new Promise<T>((res, rej) => {
+        const timer = setTimeout(() => {
+            sub.unsubscribe();
+            const err = new Error(`[STOMP] pending timeout: ${topic}`);
+            console.error(err.message);
+            rej(err);
+        }, timeoutMs);
+
+        const sub = getStompClient().subscribe(topic, (frame) => {
+            try {
+                const msg: T = JSON.parse(frame.body);
+                clearTimeout(timer);
+                sub.unsubscribe();
+                res(msg);
+            } catch (e) {
+                clearTimeout(timer);
+                sub.unsubscribe();
+                rej(e);
+            }
+        });
+    });
+}

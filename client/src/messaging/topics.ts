@@ -6,14 +6,13 @@ export const TOPICS = {
     },
     transport: {
         connected: '/topic/transport.connected',
-        sendCreated: '/topic/transport.send.created',
-        recvCreated: '/topic/transport.recv.created',
+        created: '/topic/transport.send.created',
     },
     producer: {
-        produced: '/topic/producer.produced',
-        newProducer: '/topic/producer.new',
+        created: '/topic/producer.created',
+        new: '/topic/producer.new',
     },
     consumer: {
-        consumed: '/topic/consumer.consumed',
+        created: '/topic/consumer.created',
     },
 } as const;

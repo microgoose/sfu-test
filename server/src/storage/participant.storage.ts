@@ -1,4 +1,4 @@
-import { Participant } from '../model/participant.ts';
+import {Participant} from '../model/participant.ts';
 
 const store = new Map<string, Participant>();
 

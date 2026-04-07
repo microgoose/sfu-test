@@ -1,10 +1,10 @@
-import { Room } from '../model/room.ts';
+import {Room} from '../model/room.ts';
 import * as roomStorage from '../storage/room.storage.ts';
 import * as participantStorage from '../storage/participant.storage.ts';
 import * as sessionStorage from '../storage/session.storage.ts';
-import { createRouter, getRtpCapabilities } from '../infra/mediasoup/router.service.ts';
-import { sendTo, broadcastExcept } from '../infra/stomp/stomp-broker.ts';
-import { TOPICS } from '../config/ws.topics.ts';
+import {createRouter, getRtpCapabilities} from '../infra/mediasoup/router.service.ts';
+import {broadcastExcept, sendTo} from '../infra/stomp/stomp-broker.ts';
+import {TOPICS} from '../config/ws.topics.ts';
 
 export async function createRoom(id: string): Promise<void> {
     const routerId = await createRouter();

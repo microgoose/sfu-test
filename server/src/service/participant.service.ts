@@ -1,18 +1,11 @@
-import { Participant } from '../model/participant.ts';
+import {Participant} from '../model/participant.ts';
 import * as participantStorage from '../storage/participant.storage.ts';
 import * as roomStorage from '../storage/room.storage.ts';
 import * as sessionStorage from '../storage/session.storage.ts';
-import {
-    createTransport,
-    connectTransport,
-    createProducer,
-    createConsumer,
-    canConsume,
-    resumeConsumer,
-} from '../infra/mediasoup/transport.service.ts';
-import { sendTo, broadcastExcept } from '../infra/stomp/stomp-broker.ts';
-import { TOPICS } from '../config/ws.topics.ts';
-import { DtlsParameters, MediaKind, RtpCapabilities, RtpParameters, SctpCapabilities } from 'mediasoup/types';
+import * as transportService from '../infra/mediasoup/transport.service.ts';
+import {broadcastExcept, sendTo} from '../infra/stomp/stomp-broker.ts';
+import {TOPICS} from '../config/ws.topics.ts';
+import {DtlsParameters, MediaKind, RtpCapabilities, RtpParameters} from 'mediasoup/types';
 
 // ─── Lifecycle ────────────────────────────────────────────────
 
@@ -43,26 +36,20 @@ export function disconnectParticipant(sessionId: string): void {
 
 // ─── Transport ────────────────────────────────────────────────
 
-export async function setupTransport(sessionId: string, direction: string, sctpCapabilities: SctpCapabilities): Promise<void> {
+export async function createTransport(sessionId: string): Promise<void> {
     const room = getRoomBySession(sessionId);
-    const parameters = await createTransport(room.routerId);
-
-    if (direction === 'send')
-        sendTo(sessionId, TOPICS.transport.sendCreated, { parameters });
-    else if (direction === 'recv')
-        sendTo(sessionId, TOPICS.transport.recvCreated, { parameters });
-    else
-        throw new Error(`Unknown direction: ${direction}`);
+    const parameters = await transportService.createTransport(room.routerId);
+    sendTo(sessionId, TOPICS.transport.created, { parameters });
 }
 
-export async function setupConnectTransport(sessionId: string, transportId: string, dtlsParameters: DtlsParameters): Promise<void> {
-    await connectTransport(transportId, dtlsParameters);
+export async function connectTransport(sessionId: string, transportId: string, dtlsParameters: DtlsParameters): Promise<void> {
+    await transportService.connectTransport(transportId, dtlsParameters);
     sendTo(sessionId, TOPICS.transport.connected, { transportId });
 }
 
 // ─── Producer ─────────────────────────────────────────────────
 
-export async function setupProduce(
+export async function createProducer(
     sessionId: string,
     transportId: string,
     kind: MediaKind,
@@ -71,34 +58,34 @@ export async function setupProduce(
 ): Promise<void> {
     const participantId = sessionStorage.getParticipantId(sessionId);
     const room = getRoomBySession(sessionId);
-    const producerId = await createProducer(transportId, kind, rtpParameters, appData);
+    const producerId = await transportService.createProducer(transportId, kind, rtpParameters, appData);
 
-    sendTo(sessionId, TOPICS.producer.produced, { producerId });
+    sendTo(sessionId, TOPICS.producer.created, { producerId });
 
     const otherSessionIds = room
         .getOtherParticipantIds(participantId)
         .map(id => sessionStorage.getSessionId(id));
 
-    broadcastExcept(sessionId, otherSessionIds, TOPICS.producer.newProducer, { producerId, kind });
+    broadcastExcept(sessionId, otherSessionIds, TOPICS.producer.new, { producerId, kind });
 }
 
 // ─── Consumer ─────────────────────────────────────────────────
 
-export async function setupConsume(
+export async function createConsumer(
     sessionId: string,
     transportId: string,
     producerId: string,
     rtpCapabilities: RtpCapabilities,
 ): Promise<void> {
-    if (!canConsume(producerId, rtpCapabilities))
+    if (!transportService.canConsume(producerId, rtpCapabilities))
         throw new Error(`Cannot consume producer ${producerId}`);
 
-    const params = await createConsumer(transportId, producerId, rtpCapabilities);
-    sendTo(sessionId, TOPICS.consumer.consumed, params);
+    const params = await transportService.createConsumer(transportId, producerId, rtpCapabilities);
+    sendTo(sessionId, TOPICS.consumer.created, params);
 }
 
-export async function setupResumeConsumer(consumerId: string): Promise<void> {
-    await resumeConsumer(consumerId);
+export async function resumeConsumer(consumerId: string): Promise<void> {
+    await transportService.resumeConsumer(consumerId);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────

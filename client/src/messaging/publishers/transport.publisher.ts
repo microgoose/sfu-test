@@ -16,12 +16,12 @@ export function connectTransport(payload: ConnectTransportPayload): void {
     publish(COMMANDS.transport.connect, payload);
 }
 
-export function produce(payload: ProducePayload): void {
-    publish(COMMANDS.producer.produce, payload);
+export function createProducer(payload: ProducePayload): void {
+    publish(COMMANDS.producer.create, payload);
 }
 
-export function consume(payload: ConsumePayload): void {
-    publish(COMMANDS.consumer.consume, payload);
+export function createConsumer(payload: ConsumePayload): void {
+    publish(COMMANDS.consumer.create, payload);
 }
 
 export function resumeConsumer(payload: ResumeConsumerPayload): void {

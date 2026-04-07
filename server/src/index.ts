@@ -1,12 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-import { createServer } from 'node:http';
-import { HTTP_PORT, WS_PATH, ANNOUNCED_ADDRESS } from './config/server.config.ts';
-import { createStompServer } from './infra/stomp/stomp-server.ts';
-import { roomRouter } from './routes/room.routes.ts';
-import { registerStompRoutes } from './routes/stomp.routes.ts';
-import { createWorker } from './infra/mediasoup/worker.service.ts';
-import { createRoom } from './service/room.service.ts';
+import {createServer} from 'node:http';
+import {ANNOUNCED_ADDRESS, HTTP_PORT, WS_PATH} from './config/server.config.ts';
+import {createStompServer} from './infra/stomp/stomp-server.ts';
+import {roomRouter} from './routes/room.routes.ts';
+import {registerStompRoutes} from './routes/stomp.routes.ts';
+import {createWorker} from './infra/mediasoup/worker.service.ts';
+import {createRoom} from './service/room.service.ts';
 
 const app = express();
 app.use(cors());

@@ -1,6 +1,6 @@
-import { WebSocketServer, WebSocket } from 'ws';
-import { Server } from 'node:http';
-import { onCommand, registerSession, removeSession } from './stomp-broker.ts';
+import {WebSocket, WebSocketServer} from 'ws';
+import {Server} from 'node:http';
+import {onCommand, registerSession, removeSession} from './stomp-broker.ts';
 import {connectParticipant, disconnectParticipant} from "../../service/participant.service.ts";
 import {createSession, StompSession} from "./stomp-session.ts";
 

@@ -1,10 +1,10 @@
 import {onCleanup, onMount} from 'solid-js';
-import {getStompClient} from '../messaging/client';
-import {subscribeToRoom} from '../messaging/subscribers/room.subscriber';
-import {subscribeToTransport} from '../messaging/subscribers/transport.subscriber';
-import * as roomPublisher from '../messaging/publishers/room.publisher';
-import {MediasoupHook, useMediasoup} from './use-mediasoup';
-import {StompSubscription} from '@stomp/stompjs';
+import {getStompClient, subscribe} from '../messaging/client';
+import {useMediasoup} from './use-mediasoup';
+import {joinRoom, leaveRoom} from "../api/rooms-api";
+import {NewProducerMessage} from "../messaging/types/transport.types";
+import {TOPICS} from "../messaging/topics";
+import {StompSubscription} from "@stomp/stompjs";
 
 interface UseRoomOptions {
     roomId: string;
@@ -14,57 +14,33 @@ interface UseRoomOptions {
 export function useRoom(options: UseRoomOptions) {
     const {roomId} = options;
     const mediasoup = useMediasoup(options);
-    const subscriptions: StompSubscription[] = [];
+    const subs: StompSubscription[] = [];
 
     onMount(() => {
+        // TODO параша, какого хуя здесь инициализация
         const client = getStompClient();
 
-        client.onConnect = () => {
+        client.onConnect = async () => {
             console.debug('Connected');
-            if (subscriptions.length > 0) return;
+            const {rtpCapabilities} = await joinRoom(roomId);
+            mediasoup.setup(rtpCapabilities);
 
-            subscriptions.push(
-                ...setupRoomSubscriptions(mediasoup),
-                ...setupTransportSubscriptions(mediasoup)
-            );
-
-            roomPublisher.join({roomId});
+            subs.push(subscribe<NewProducerMessage>(
+                TOPICS.producer.new,
+                (msg) => mediasoup.onNewProducer(msg.payload.producerId, msg.payload.kind)
+            ));
         };
 
         client.activate();
 
         onCleanup(() => {
-            subscriptions.forEach(sub => sub.unsubscribe());
-            subscriptions.length = 0;
-            roomPublisher.leave({roomId});
-            getStompClient().deactivate();
+            subs.forEach(sub => sub.unsubscribe());
+            subs.length = 0;
+            leaveRoom(roomId).then(() => getStompClient().deactivate());
         });
     });
 
     return {
         videos: mediasoup.videos,
     };
-}
-
-function setupRoomSubscriptions(mediasoup: MediasoupHook) {
-    return subscribeToRoom({
-        onParticipantJoined: (participantId) => {
-            console.debug('Participant joined:', participantId);
-        },
-        onParticipantLeft: (participantId) => {
-            console.debug('Participant left:', participantId);
-        },
-        onRtpCapabilities: mediasoup.handleRtpCapabilities,
-    });
-}
-
-function setupTransportSubscriptions(mediasoup: MediasoupHook) {
-    return subscribeToTransport({
-        onSendTransportCreated: mediasoup.handleSendTransportCreated,
-        onRecvTransportCreated: mediasoup.handleRecvTransportCreated,
-        onTransportConnected: mediasoup.handleTransportConnected,
-        onProduced: mediasoup.handleProduced,
-        onNewProducer: mediasoup.handleNewProducer,
-        onConsumed: mediasoup.handleConsumed,
-    });
 }

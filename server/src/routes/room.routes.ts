@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import {Router} from 'express';
 import * as roomService from '../service/room.service.ts';
 
 export const roomRouter = Router()

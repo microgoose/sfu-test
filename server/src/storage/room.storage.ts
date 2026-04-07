@@ -1,4 +1,4 @@
-import { Room } from '../model/room.ts';
+import {Room} from '../model/room.ts';
 
 const store = new Map<string, Room>();
 

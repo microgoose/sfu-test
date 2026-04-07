@@ -8,10 +8,10 @@ export const COMMANDS = {
         connect: '/app/transport.connect',
     },
     producer: {
-        produce: '/app/producer.produce',
+        create: '/app/producer.produce',
     },
     consumer: {
-        consume: '/app/consumer.consume',
+        create: '/app/consumer.consume',
         resume: '/app/consumer.resume',
     },
 } as const;

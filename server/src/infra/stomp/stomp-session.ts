@@ -75,7 +75,7 @@ export function createSession(
             const id = headers?.id;
             if (destination && id) {
                 subscriptions.set(destination, id);
-                console.debug(`[STOMP] Subscribe: ${destination} id=${id}`);
+                console.debug(`[STOMP Subscribe]: ${destination} id=${id}`);
             }
         },
 

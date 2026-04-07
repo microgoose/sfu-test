@@ -1,5 +1,5 @@
 import * as mediasoup from 'mediasoup';
-import {Worker, WebRtcServer} from "mediasoup/types";
+import {WebRtcServer, Worker} from "mediasoup/types";
 
 interface WorkerEntry {
     worker: Worker;

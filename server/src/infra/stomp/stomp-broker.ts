@@ -1,9 +1,9 @@
 import {OnCommandCallback, StompSession} from "./stomp-session.ts";
 
-type CommandHandler = (session: StompSession, body: unknown) => void | Promise<void>;
+type CommandHandler<T> = (session: StompSession, body: T) => void | Promise<void>;
 
 const sessions = new Map<string, StompSession>();
-const handlers = new Map<string, CommandHandler>();
+const handlers = new Map<string, CommandHandler<any>>();
 
 export function registerSession(session: StompSession): void {
     sessions.set(session.id, session);
@@ -21,7 +21,7 @@ export function getSession(sessionId: string): StompSession {
     return session;
 }
 
-export function registerHandler(destination: string, handler: CommandHandler): void {
+export function registerHandler<T>(destination: string, handler: CommandHandler<T>): void {
     handlers.set(destination, handler);
 }
 

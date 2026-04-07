@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import {randomUUID} from 'node:crypto';
 
 export class Participant {
     readonly id: string;

@@ -1,14 +1,7 @@
 import {Accessor, createSignal} from 'solid-js';
 import {Device} from 'mediasoup-client';
-import {MediaKind, RtpCapabilities, Transport, TransportOptions,} from 'mediasoup-client/types';
-import {
-    connectTransport,
-    consume,
-    createTransport,
-    produce,
-    resumeConsumer
-} from "../messaging/publishers/transport.publisher";
-import {ConsumedMessage} from "../messaging/types/transport.types";
+import {Consumer, MediaKind, RtpCapabilities, Transport, TransportOptions,} from 'mediasoup-client/types';
+import {connectTransport, createConsumer, createProducer, createTransport, resumeConsumer} from "../api/transport.api";
 
 interface VideoEntry {
     id: string;
@@ -20,20 +13,10 @@ interface UseMediasoupOptions {
     getStream: () => MediaStream;
 }
 
-interface PendingProducer {
-    producerId: string,
-    kind: MediaKind
-}
-
 export interface MediasoupHook {
     videos: Accessor<VideoEntry[]>,
-    handleRtpCapabilities: (rtpCapabilities: RtpCapabilities) => void;
-    handleSendTransportCreated: (parameters: TransportOptions) => void;
-    handleRecvTransportCreated: (parameters: TransportOptions) => void;
-    handleTransportConnected: (transportId: string) => void;
-    handleProduced: (producerId: string, kind: MediaKind) => void;
-    handleNewProducer: (producerId: string, kind: MediaKind) => void;
-    handleConsumed: (payload: ConsumedMessage['payload']) => void;
+    setup: (rtpCapabilities: RtpCapabilities) => void;
+    onNewProducer: (producerId: string, kind: MediaKind) => Promise<void>
 }
 
 // TODO можно подумать о том что бы разделить на классы с состоянием, сложность ебейшая
@@ -42,109 +25,72 @@ export function useMediasoup(options: UseMediasoupOptions): MediasoupHook {
     const [videos, setVideos] = createSignal<VideoEntry[]>([]);
 
     const device = new Device();
-    const connectCallbacks = new Map<string, () => void>();
-    const produceCallbacks = new Map<string, (id: { id: string }) => void>();
-    const pendingProducers = new Map<string, MediaKind>();
-
-    let sendTransport: Transport | null = null;
     let recvTransport: Transport | null = null;
-
-    function getSendTransport() {
-        if (!sendTransport)
-            throw new Error('Send transport is null');
-        return sendTransport;
-    }
 
     function getRecvTransport() {
         if (!recvTransport)
-            throw new Error('Send transport is null');
+            throw new Error('Recv transport not initialized!');
         return recvTransport;
     }
 
-    // ─── Device ──────────────────────────────────────────────
+    async function setup(rtpCapabilities: RtpCapabilities) {
+        if (device.loaded)
+            return;
 
-    async function handleRtpCapabilities(rtpCapabilities: RtpCapabilities) {
-        console.debug('Handle RTP capabilities');
+        await device.load({routerRtpCapabilities: rtpCapabilities});
 
-        if (!device.loaded) {
-            console.debug('Load device');
-            await device.load({routerRtpCapabilities: rtpCapabilities});
-        }
+        const sendTransportParams = await createTransport({
+            direction: 'send',
+            sctpCapabilities: device.sctpCapabilities
+        });
+        const sendTransport = createLocalSendTransport(device, sendTransportParams);
 
-        createTransport({direction: 'send', sctpCapabilities: device.sctpCapabilities});
-        createTransport({direction: 'recv', sctpCapabilities: device.sctpCapabilities});
+        const recvTransportParams = await createTransport({
+            direction: 'recv',
+            sctpCapabilities: device.sctpCapabilities
+        });
+        recvTransport = createLocalRecvTransport(device, recvTransportParams);
+
+        await startProducing(sendTransport);
     }
 
-    // ─── Транспорты ───────────────────────────────────────────
-
-    async function handleSendTransportCreated(parameters: TransportOptions) {
+    function createLocalSendTransport(device: Device, parameters: TransportOptions) {
         console.debug('Send transport created');
-        const newSendTransport = sendTransport = device.createSendTransport(parameters);
+        const sendTransport = device.createSendTransport(parameters);
 
-        newSendTransport.on('connect', ({dtlsParameters}, callback, errback) => {
-            try {
-                console.debug(`Connect send transport ${newSendTransport.id}`);
-                connectCallbacks.set(newSendTransport.id, callback);
-                connectTransport({transportId: newSendTransport.id, dtlsParameters});
-            } catch (e: any) {
-                errback(e);
-            }
+        sendTransport.on('connect', ({dtlsParameters}, callback, errback) => {
+            console.debug(`Connect send transport ${sendTransport.id}`);
+            connectTransport({transportId: sendTransport.id, dtlsParameters})
+                .then(callback)
+                .catch(errback);
         });
 
-        newSendTransport.on('produce', ({kind, rtpParameters, appData}, callback, errback) => {
-            try {
-                console.debug(`Request producer, transport ${newSendTransport.id} ${kind}`);
-                produceCallbacks.set(kind, callback);
-                produce({
-                    transportId: newSendTransport.id,
-                    kind,
-                    rtpParameters,
-                    appData,
-                });
-            } catch (e: any) {
-                errback(e);
-            }
+        sendTransport.on('produce', ({kind, rtpParameters, appData}, callback, errback) => {
+            console.debug(`Create producer, transport ${sendTransport.id} ${kind}`);
+            createProducer({transportId: sendTransport.id, kind, rtpParameters, appData})
+                .then(payload => callback({ id: payload.producerId }))
+                .catch(errback);
         });
 
-        await startProducing();
+        return sendTransport;
     }
 
-    async function handleRecvTransportCreated(parameters: TransportOptions) {
+    function createLocalRecvTransport(device: Device, parameters: TransportOptions) {
         console.debug('Recv transport created');
-        const newRecvTransport = recvTransport = device.createRecvTransport(parameters);
+        const recvTransport = device.createRecvTransport(parameters);
 
-        newRecvTransport.on('connect', ({dtlsParameters}, callback, errback) => {
-            try {
-                console.debug(`Connect recv transport ${newRecvTransport.id}`);
-                connectCallbacks.set(newRecvTransport.id, callback);
-                connectTransport({transportId: newRecvTransport.id, dtlsParameters});
-            } catch (e: any) {
-                errback(e);
-            }
+        recvTransport.on('connect', ({dtlsParameters}, callback, errback) => {
+            console.debug(`Connect recv transport ${recvTransport.id}`);
+            connectTransport({transportId: recvTransport.id, dtlsParameters})
+                .then(callback)
+                .catch(errback);
         });
 
-        for (const [producerId, kind] of pendingProducers.entries()) {
-            doConsume(producerId, kind);
-        }
-        pendingProducers.clear();
+        return recvTransport;
     }
 
-    function handleTransportConnected(transportId: string) {
-        console.debug(`Transport connected ${transportId}`);
-        console.debug('Send transport id:', sendTransport?.id);
-        console.debug('Recv transport id:', recvTransport?.id);
-
-        const cb = connectCallbacks.get(transportId);
-        if (cb) {
-            cb();
-            connectCallbacks.delete(transportId);
-        }
-    }
-
-    // ─── Producer ─────────────────────────────────────────────
-
-    async function startProducing() {
-        console.debug(`Start produsing..`);
+    async function startProducing(sendTransport: Transport) {
+        console.debug(`Start producing..`);
         const stream = options.getStream();
         const videoTrack = stream.getVideoTracks()[0];
         const audioTrack = stream.getAudioTracks()[0];
@@ -155,46 +101,34 @@ export function useMediasoup(options: UseMediasoupOptions): MediasoupHook {
             stream: stream,
         }]);
 
-        if (videoTrack) await getSendTransport().produce({track: videoTrack});
-        if (audioTrack) await getSendTransport().produce({track: audioTrack});
+        if (videoTrack) await sendTransport.produce({track: videoTrack});
+        if (audioTrack) await sendTransport.produce({track: audioTrack});
     }
 
-    function handleProduced(producerId: string, kind: MediaKind) {
-        console.debug(`Producer registred ${producerId}`);
-        const cb = produceCallbacks.get(kind);
-        if (cb) {
-            cb({id: producerId});
-            produceCallbacks.delete(kind);
-        }
-    }
+    function applyConsumer(producerId: string, consumer: Consumer) {
+        const mediaStream = new MediaStream([consumer.track]);
+        setVideos(prev => {
+            const existing = prev.find(v => v.id === producerId);
+            if (existing) {
+                existing.stream.addTrack(consumer.track);
+                return [...prev];
+            }
 
-    // ─── Consumer ─────────────────────────────────────────────
-
-    function handleNewProducer(producerId: string, kind: MediaKind) {
-        if (!recvTransport) {
-            console.debug(`Queuing producer ${producerId} (no transport yet)`);
-            pendingProducers.set(producerId, kind);
-            return;
-        }
-
-        console.debug(`Consuming producer ${producerId}`);
-        doConsume(producerId, kind);
-    }
-
-    function doConsume(producerId: string, kind: MediaKind) {
-        console.debug(`Start consuming producer ${producerId}`);
-        consume({
-            transportId: getRecvTransport().id,
-            producerId,
-            kind,
-            rtpCapabilities: device.recvRtpCapabilities,
+            return [...prev, {
+                id: producerId,
+                label: `Participant ${producerId.slice(0, 6)}`,
+                stream: mediaStream,
+            }];
         });
     }
 
-    async function handleConsumed(payload: ConsumedMessage['payload']) {
-        console.debug('Handle consumed');
-        const {consumerId, producerId, kind, rtpParameters} = payload;
-        pendingProducers.delete(producerId);
+    async function onNewProducer(producerId: string, kind: MediaKind) {
+        const {consumerId, rtpParameters} = await createConsumer({
+            transportId: getRecvTransport().id,
+            producerId,
+            rtpCapabilities: device.recvRtpCapabilities,
+            kind,
+        });
 
         const consumer = await getRecvTransport().consume({
             id: consumerId,
@@ -203,36 +137,13 @@ export function useMediasoup(options: UseMediasoupOptions): MediasoupHook {
             rtpParameters,
         });
 
-        const mediaStream = new MediaStream([consumer.track]);
-
-        setVideos(prev => {
-            // audio — добавляем трек к существующему участнику
-            const existing = prev.find(v => v.id === producerId);
-            if (existing) {
-                existing.stream.addTrack(consumer.track);
-                return [...prev];
-            }
-
-            // video — создаём новый стрим
-            return [...prev, {
-                id: producerId,
-                label: `Participant ${producerId.slice(0, 6)}`,
-                stream: mediaStream,
-            }];
-        });
-
-        resumeConsumer({consumerId: consumer.id});
+        applyConsumer(producerId, consumer);
+        resumeConsumer({ consumerId: consumer.id });
     }
 
     return {
         videos,
-        // Хэндлеры для useRoom
-        handleRtpCapabilities,
-        handleSendTransportCreated,
-        handleRecvTransportCreated,
-        handleTransportConnected,
-        handleProduced,
-        handleNewProducer,
-        handleConsumed,
+        setup,
+        onNewProducer,
     };
 }

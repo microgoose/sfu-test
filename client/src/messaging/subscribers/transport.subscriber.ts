@@ -25,12 +25,12 @@ export function subscribeToTransport(
 ): StompSubscription[] {
     return [
         subscribe<SendTransportCreatedMessage>(
-            TOPICS.transport.sendCreated,
+            TOPICS.transport.created,
             (msg) => callbacks.onSendTransportCreated(msg.payload.parameters)
         ),
 
         subscribe<RecvTransportCreatedMessage>(
-            TOPICS.transport.recvCreated,
+            TOPICS.transport.created,
             (msg) => callbacks.onRecvTransportCreated(msg.payload.parameters)
         ),
 
@@ -40,17 +40,17 @@ export function subscribeToTransport(
         ),
 
         subscribe<ProducedMessage>(
-            TOPICS.producer.produced,
+            TOPICS.producer.created,
             (msg) => callbacks.onProduced(msg.payload.producerId, msg.payload.kind)
         ),
 
         subscribe<NewProducerMessage>(
-            TOPICS.producer.newProducer,
+            TOPICS.producer.new,
             (msg) => callbacks.onNewProducer(msg.payload.producerId, msg.payload.kind)
         ),
 
         subscribe<ConsumedMessage>(
-            TOPICS.consumer.consumed,
+            TOPICS.consumer.created,
             (msg) => callbacks.onConsumed(msg.payload)
         ),
     ];

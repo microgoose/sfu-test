@@ -1,16 +1,11 @@
-import { registerHandler } from '../infra/stomp/stomp-broker.ts';
-import { COMMANDS } from '../config/ws.commands.ts';
+import {registerHandler} from '../infra/stomp/stomp-broker.ts';
+import {COMMANDS} from '../config/ws.commands.ts';
 import * as roomService from '../service/room.service.ts';
 import * as participantService from '../service/participant.service.ts';
-import {DtlsParameters, MediaKind, RtpCapabilities, RtpParameters, SctpCapabilities} from "mediasoup/types";
+import {DtlsParameters, MediaKind, RtpCapabilities, RtpParameters} from "mediasoup/types";
 
 interface JoinRoomBody {
     roomId: string;
-}
-
-interface CreateTransportBody {
-    direction: 'send' | 'recv';
-    dtlsParameters: SctpCapabilities;
 }
 
 interface ConnectTransportBody {
@@ -36,44 +31,38 @@ interface ResumeConsumerBody {
 }
 
 export function registerStompRoutes(): void {
-    registerHandler(COMMANDS.room.join, (session, body) => {
-        console.debug(`[STOMP Routes] ${COMMANDS.room.join}`);
-        const { roomId } = body as JoinRoomBody;
-        roomService.joinRoom(session.id, roomId);
+    registerHandler<JoinRoomBody>(COMMANDS.room.join, (session, body) => {
+        console.debug(`[STOMP Command] ${COMMANDS.room.join}`);
+        roomService.joinRoom(session.id, body.roomId);
     });
 
     registerHandler(COMMANDS.room.leave, (session) => {
-        console.debug(`[STOMP Routes] ${COMMANDS.room.leave}`);
+        console.debug(`[STOMP Command] ${COMMANDS.room.leave}`);
         roomService.leaveRoom(session.id);
     });
 
-    registerHandler(COMMANDS.transport.create, (session, body) => {
-        console.debug(`[STOMP Routes] ${COMMANDS.transport.create}`);
-        const { direction, dtlsParameters } = body as CreateTransportBody;
-        participantService.setupTransport(session.id, direction, dtlsParameters);
+    registerHandler(COMMANDS.transport.create, async (session, body) => {
+        console.debug(`[STOMP Command] ${COMMANDS.transport.create}`);
+        await participantService.createTransport(session.id);
     });
 
-    registerHandler(COMMANDS.transport.connect, (session, body) => {
-        console.debug(`[STOMP Routes] ${COMMANDS.transport.connect}`);
-        const { transportId, dtlsParameters } = body as ConnectTransportBody;
-        participantService.setupConnectTransport(session.id, transportId, dtlsParameters);
+    registerHandler<ConnectTransportBody>(COMMANDS.transport.connect, async (session, body) => {
+        console.debug(`[STOMP Command] ${COMMANDS.transport.connect}`);
+        await participantService.connectTransport(session.id, body.transportId, body.dtlsParameters);
     });
 
-    registerHandler(COMMANDS.producer.produce, (session, body) => {
-        console.debug(`[STOMP Routes] ${COMMANDS.producer.produce}`);
-        const { transportId, kind, rtpParameters, appData } = body as ProduceBody;
-        participantService.setupProduce(session.id, transportId, kind, rtpParameters, appData);
+    registerHandler<ProduceBody>(COMMANDS.producer.create, async (session, body) => {
+        console.debug(`[STOMP Command] ${COMMANDS.producer.create}`);
+        await participantService.createProducer(session.id, body.transportId, body.kind, body.rtpParameters, body.appData);
     });
 
-    registerHandler(COMMANDS.consumer.consume, (session, body) => {
-        console.debug(`[STOMP Routes] ${COMMANDS.consumer.consume}`);
-        const { transportId, producerId, rtpCapabilities } = body as ConsumeBody;
-        participantService.setupConsume(session.id, transportId, producerId, rtpCapabilities);
+    registerHandler<ConsumeBody>(COMMANDS.consumer.create, async (session, body) => {
+        console.debug(`[STOMP Command] ${COMMANDS.consumer.create}`);
+        await participantService.createConsumer(session.id, body.transportId, body.producerId, body.rtpCapabilities);
     });
 
-    registerHandler(COMMANDS.consumer.resume, (_session, body) => {
-        console.debug(`[STOMP Routes] ${COMMANDS.consumer.resume}`);
-        const { consumerId } = body as ResumeConsumerBody;
-        participantService.setupResumeConsumer(consumerId);
+    registerHandler<ResumeConsumerBody>(COMMANDS.consumer.resume, async (_session, body) => {
+        console.debug(`[STOMP Command] ${COMMANDS.consumer.resume}`);
+        await participantService.resumeConsumer(body.consumerId);
     });
 }
