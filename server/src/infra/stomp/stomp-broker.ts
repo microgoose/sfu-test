@@ -7,12 +7,12 @@ const handlers = new Map<string, CommandHandler<any>>();
 
 export function registerSession(session: StompSession): void {
     sessions.set(session.id, session);
-    console.debug(`[Broker] Session registered: ${session.id}`);
+    console.debug(`[STOMP Broker] Session registered: ${session.id}`);
 }
 
 export function removeSession(sessionId: string): void {
     sessions.delete(sessionId);
-    console.debug(`[Broker] Session removed: ${sessionId}`);
+    console.debug(`[STOMP Broker] Session removed: ${sessionId}`);
 }
 
 export function getSession(sessionId: string): StompSession {
@@ -29,7 +29,7 @@ export const onCommand: OnCommandCallback = (session, destination, body) => {
     const handler = handlers.get(destination);
 
     if (!handler) {
-        console.error(`[Broker] No handler for: ${destination}`);
+        console.error(`[STOMP Broker] No handler for: ${destination}`);
         return;
     }
 
@@ -40,10 +40,10 @@ export const onCommand: OnCommandCallback = (session, destination, body) => {
 export function sendTo(sessionId: string, destination: string, body: object): void {
     const session = sessions.get(sessionId);
     if (!session) {
-        console.error(`[Broker] sendTo: session ${sessionId} not found`);
+        console.error(`[STOMP Broker] sendTo: session ${sessionId} not found`);
         return;
     }
-    console.debug(`[Broker] Send to ${destination}`);
+    console.debug(`[STOMP Broker] Send to ${destination}`);
     session.send(destination, body);
 }
 

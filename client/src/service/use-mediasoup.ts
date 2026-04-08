@@ -59,14 +59,14 @@ export function useMediasoup(options: UseMediasoupOptions): MediasoupHook {
         const sendTransport = device.createSendTransport(parameters);
 
         sendTransport.on('connect', ({dtlsParameters}, callback, errback) => {
-            console.debug(`Connect send transport ${sendTransport.id}`);
+            console.debug(`Connect send transport ${sendTransport.id}, dtlsParameters ${JSON.stringify(dtlsParameters)}`);
             connectTransport({transportId: sendTransport.id, dtlsParameters})
                 .then(callback)
                 .catch(errback);
         });
 
         sendTransport.on('produce', ({kind, rtpParameters, appData}, callback, errback) => {
-            console.debug(`Create producer, transport ${sendTransport.id} ${kind}`);
+            console.debug(`Create producer, transport ${sendTransport.id} ${kind} ${JSON.stringify(rtpParameters)}`);
             createProducer({transportId: sendTransport.id, kind, rtpParameters, appData})
                 .then(payload => callback({ id: payload.producerId }))
                 .catch(errback);
@@ -80,7 +80,7 @@ export function useMediasoup(options: UseMediasoupOptions): MediasoupHook {
         const recvTransport = device.createRecvTransport(parameters);
 
         recvTransport.on('connect', ({dtlsParameters}, callback, errback) => {
-            console.debug(`Connect recv transport ${recvTransport.id}`);
+            console.debug(`Connect recv transport ${recvTransport.id}, dtlsParameters ${JSON.stringify(dtlsParameters)}`);
             connectTransport({transportId: recvTransport.id, dtlsParameters})
                 .then(callback)
                 .catch(errback);
@@ -90,7 +90,7 @@ export function useMediasoup(options: UseMediasoupOptions): MediasoupHook {
     }
 
     async function startProducing(sendTransport: Transport) {
-        console.debug(`Start producing..`);
+        console.debug(`Start producing.. Transport ${sendTransport.id}`);
         const stream = options.getStream();
         const videoTrack = stream.getVideoTracks()[0];
         const audioTrack = stream.getAudioTracks()[0];
@@ -123,19 +123,22 @@ export function useMediasoup(options: UseMediasoupOptions): MediasoupHook {
     }
 
     async function onNewProducer(producerId: string, kind: MediaKind) {
-        const {consumerId, rtpParameters} = await createConsumer({
+        console.debug(`On new producer, producerId=${producerId} kind=${kind}`);
+        const consumerParams = await createConsumer({
             transportId: getRecvTransport().id,
             producerId,
             rtpCapabilities: device.recvRtpCapabilities,
             kind,
         });
+        console.debug(`Consumer created:`, JSON.stringify(consumerParams));
 
         const consumer = await getRecvTransport().consume({
-            id: consumerId,
+            id: consumerParams.consumerId,
             producerId,
             kind,
-            rtpParameters,
+            rtpParameters: consumerParams.rtpParameters,
         });
+        console.debug(`Consume started id=${consumer.id} kind=${consumer.kind}`);
 
         applyConsumer(producerId, consumer);
         resumeConsumer({ consumerId: consumer.id });

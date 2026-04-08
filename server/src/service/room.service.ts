@@ -12,14 +12,21 @@ export async function createRoom(id: string): Promise<void> {
     console.debug(`[RoomService] Room created id=${id}`);
 }
 
-export function findById(id: string): Room {
+export function findRoomById(id: string): Room {
     const room = roomStorage.findById(id);
     if (!room) throw new Error(`Room ${id} not found`);
     return room;
 }
 
-export function findAll(): Room[] {
+export function findAllRooms(): Room[] {
     return roomStorage.findAll();
+}
+
+export function getRoomBySession(sessionId: string) {
+    const participantId = sessionStorage.getParticipantId(sessionId);
+    const room = roomStorage.findByParticipantId(participantId);
+    if (!room) throw new Error(`Participant ${participantId} is not in a room`);
+    return room;
 }
 
 export function joinRoom(sessionId: string, roomId: string): void {
@@ -27,7 +34,7 @@ export function joinRoom(sessionId: string, roomId: string): void {
     const participant = participantStorage.findById(participantId);
     if (!participant) throw new Error(`Participant ${participantId} not found`);
 
-    const room = findById(roomId);
+    const room = findRoomById(roomId);
     room.addParticipant(participant);
 
     const rtpCapabilities = getRtpCapabilities(room.routerId);

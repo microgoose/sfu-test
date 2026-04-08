@@ -1,5 +1,5 @@
 import {getWorkerEntry} from "./worker.service.ts";
-import {Router, RtpCodecCapability, WebRtcServer} from "mediasoup/types";
+import {Router, RouterRtpCodecCapability, WebRtcServer} from "mediasoup/types";
 
 interface RouterEntry {
     router: Router;
@@ -7,9 +7,9 @@ interface RouterEntry {
 }
 
 const routers = new Map<string, RouterEntry>();
-const MEDIA_CODECS: RtpCodecCapability[] = [
-    { kind: 'video', mimeType: 'video/VP8', clockRate: 90000, preferredPayloadType: 0 },
-    { kind: 'audio', mimeType: 'audio/opus', clockRate: 48000, channels: 2, preferredPayloadType: 1 },
+const MEDIA_CODECS: RouterRtpCodecCapability[] = [
+    { kind: 'video', mimeType: 'video/VP8', clockRate: 90000 },
+    { kind: 'audio', mimeType: 'audio/opus', clockRate: 48000, channels: 2 },
 ];
 
 export async function createRouter(): Promise<string> {

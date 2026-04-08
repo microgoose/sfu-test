@@ -59,12 +59,11 @@ export async function connectTransport(
 export async function createProducer(
     transportId: string,
     kind: MediaKind,
-    rtpParameters: RtpParameters,
-    appData: Record<string, unknown>,
+    rtpParameters: RtpParameters
 ): Promise<string> {
     const {transport} = getTransportEntry(transportId);
 
-    const producer = await transport.produce({kind, rtpParameters, appData});
+    const producer = await transport.produce({kind, rtpParameters});
     producers.set(producer.id, producer);
     producerToTransport.set(producer.id, transportId);
 

@@ -66,7 +66,7 @@ export function createSession(
                 const parsed = JSON.parse(body);
                 callbacks.onCommand(session, destination, parsed);
             } catch (e) {
-                console.error(`[STOMP] Parse error on ${destination}:`, e);
+                console.error(`[STOMP Session] Parse error on ${destination}:`, e);
             }
         },
 
@@ -75,7 +75,7 @@ export function createSession(
             const id = headers?.id;
             if (destination && id) {
                 subscriptions.set(destination, id);
-                console.debug(`[STOMP Subscribe]: ${destination} id=${id}`);
+                console.debug(`[STOMP Session]: Subscribe ${destination} id=${id}`);
             }
         },
 
@@ -96,7 +96,7 @@ export function createSession(
         },
 
         onProtocolError(err) {
-            console.error(`[STOMP] Error:`, err);
+            console.error(`[STOMP Session] Error:`, err);
         },
 
         // Обязательные заглушки

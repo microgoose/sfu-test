@@ -28,13 +28,13 @@ export function createStompServer(httpServer: Server, path: string): void {
         });
 
         socket.on('close', () => {
-            console.error(`[WS] Socket closed ${sessionId}`);
             onDisconnect();
+            console.error(`[WS] Socket closed ${sessionId}`);
         });
 
         socket.on('error', (err) => {
-            console.error(`[WS] Socket error ${sessionId}:`, err);
             onDisconnect();
+            console.error(`[WS] Socket error ${sessionId}:`, err);
         });
     });
 
