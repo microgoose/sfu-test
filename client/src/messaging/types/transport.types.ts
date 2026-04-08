@@ -40,15 +40,8 @@ export interface ResumeConsumerPayload {
 
 // ─── События ───────────────────────────────
 
-export interface SendTransportCreatedMessage extends BaseMessage {
+export interface TransportCreatedMessage extends BaseMessage {
     type: 'transport.send.created';
-    payload: {
-        parameters: TransportOptions;
-    };
-}
-
-export interface RecvTransportCreatedMessage extends BaseMessage {
-    type: 'transport.recv.created';
     payload: {
         parameters: TransportOptions;
     };
@@ -75,6 +68,14 @@ export interface NewProducerMessage extends BaseMessage {
         producerId: string;
         kind: MediaKind;
     };
+}
+
+export interface RoomProducersMessage extends BaseMessage {
+    type: 'producer.new';
+    payload: {
+        producerId: string;
+        kind: MediaKind;
+    }[];
 }
 
 export interface ConsumedMessage extends BaseMessage {

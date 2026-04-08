@@ -4,7 +4,7 @@ import {createServer} from 'node:http';
 import {ANNOUNCED_ADDRESS, HTTP_PORT, WS_PATH} from './config/server.config.ts';
 import {createStompServer} from './infra/stomp/stomp-server.ts';
 import {roomRouter} from './routes/room.routes.ts';
-import {createWorker} from './infra/mediasoup/worker.service.ts';
+import {createWorker} from './infra/mediasoup/worker.adapter.ts';
 import {createRoom} from './service/room.service.ts';
 import {registerConsumerRoutes, registerProducerRoutes, registerTransportRoutes} from "./routes/transport.routes.ts";
 import {registerParticipantRoutes} from "./routes/participant.routes.ts";

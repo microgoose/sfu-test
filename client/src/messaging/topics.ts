@@ -11,6 +11,7 @@ export const TOPICS = {
     producer: {
         created: '/topic/producer.created',
         new: '/topic/producer.new',
+        roomList: '/topic/producer.room-list',
     },
     consumer: {
         created: '/topic/consumer.created',

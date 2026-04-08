@@ -9,6 +9,7 @@ export const COMMANDS = {
     },
     producer: {
         create: '/app/producer.produce',
+        getRoomProduces: '/app/producer.get-room-producers',
     },
     consumer: {
         create: '/app/consumer.consume',

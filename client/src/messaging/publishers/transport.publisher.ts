@@ -20,6 +20,10 @@ export function createProducer(payload: ProducePayload): void {
     publish(COMMANDS.producer.create, payload);
 }
 
+export function getRoomProduces(roomId: string): void {
+    publish(COMMANDS.producer.getRoomProduces, { roomId });
+}
+
 export function createConsumer(payload: ConsumePayload): void {
     publish(COMMANDS.consumer.create, payload);
 }

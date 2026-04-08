@@ -1,4 +1,4 @@
-import {getWorkerEntry} from "./worker.service.ts";
+import {getWorkerEntry} from "./worker.adapter.ts";
 import {Router, RouterRtpCodecCapability, WebRtcServer} from "mediasoup/types";
 
 interface RouterEntry {

@@ -1,4 +1,4 @@
-import {getRouter, getWebRtcServer} from './router.service.ts';
+import {getRouter, getWebRtcServer} from './router.adapter.ts';
 import {
     Consumer,
     DtlsParameters,
@@ -54,13 +54,19 @@ export async function connectTransport(
     console.debug(`[Transport] Connected id=${transportId}`);
 }
 
+export function closeTransport(transportId: string) {
+    const entry = transports.get(transportId);
+    if (entry)
+        entry.transport.close();
+}
+
 // ─── Producer ─────────────────────────────────────────────────
 
 export async function createProducer(
     transportId: string,
     kind: MediaKind,
     rtpParameters: RtpParameters
-): Promise<string> {
+): Promise<Producer> {
     const {transport} = getTransportEntry(transportId);
 
     const producer = await transport.produce({kind, rtpParameters});
@@ -68,7 +74,7 @@ export async function createProducer(
     producerToTransport.set(producer.id, transportId);
 
     console.debug(`[Transport] Producer created id=${producer.id} kind=${kind}`);
-    return producer.id;
+    return producer;
 }
 
 // ─── Consumer ─────────────────────────────────────────────────

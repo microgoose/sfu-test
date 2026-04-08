@@ -6,8 +6,9 @@ import {
     ProducedMessage,
     ProducePayload,
     ResumeConsumerPayload,
-    SendTransportCreatedMessage,
-    TransportConnectedMessage
+    RoomProducersMessage,
+    TransportConnectedMessage,
+    TransportCreatedMessage
 } from "../messaging/types/transport.types";
 import {TransportOptions} from "mediasoup-client/types";
 import {pendingSubscription} from "../messaging/client";
@@ -15,7 +16,7 @@ import {TOPICS} from "../messaging/topics";
 import * as transportPublisher from '../messaging/publishers/transport.publisher';
 
 export function createTransport(payload: CreateTransportPayload): Promise<TransportOptions> {
-    const response = pendingSubscription<SendTransportCreatedMessage>(TOPICS.transport.created)
+    const response = pendingSubscription<TransportCreatedMessage>(TOPICS.transport.created)
         .then(msg => msg.payload.parameters);
     transportPublisher.createTransport(payload);
     return response;
@@ -25,6 +26,13 @@ export function connectTransport(payload: ConnectTransportPayload): Promise<Tran
     const response = pendingSubscription<TransportConnectedMessage>(TOPICS.transport.connected)
         .then((msg) => msg.payload);
     transportPublisher.connectTransport(payload);
+    return response;
+}
+
+export function getRoomProduces(roomId: string): Promise<RoomProducersMessage['payload']> {
+    const response = pendingSubscription<RoomProducersMessage>(TOPICS.producer.roomList)
+        .then((msg) => msg.payload);
+    transportPublisher.getRoomProduces(roomId);
     return response;
 }
 

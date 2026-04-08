@@ -1,4 +1,4 @@
-import * as transportService from "../infra/mediasoup/transport.service.ts";
+import * as transportService from "../infra/mediasoup/transport.adapter.ts";
 import {sendTo} from "../infra/stomp/stomp-broker.ts";
 import {TOPICS} from "../config/ws.topics.ts";
 import {DtlsParameters} from "mediasoup/types";

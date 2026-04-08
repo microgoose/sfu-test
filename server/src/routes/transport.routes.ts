@@ -10,6 +10,10 @@ interface ConnectTransportBody {
     dtlsParameters: DtlsParameters;
 }
 
+interface GetRoomProducersList {
+    roomId: string
+}
+
 interface ProduceBody {
     transportId: string;
     kind: MediaKind;
@@ -51,6 +55,11 @@ export function registerConsumerRoutes(): void {
 }
 
 export function registerProducerRoutes(): void {
+    registerHandler<GetRoomProducersList>(COMMANDS.producer.getRoomProduces, async (session, body) => {
+        console.debug(`[STOMP Command, session ${session.id}] Get room producers`);
+        producerService.getBySession(session.id, body.roomId);
+    });
+
     registerHandler<ProduceBody>(COMMANDS.producer.create, async (session, body) => {
         console.debug(`[STOMP Command, session ${session.id}] Create producer`);
         await producerService.createProducer(session.id, body.transportId, body.kind, body.rtpParameters);
