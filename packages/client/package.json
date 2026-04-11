@@ -1,0 +1,24 @@
+{
+  "name": "@sfu-test/client",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "solid-devtools": "^0.34.3",
+    "typescript": "^5.7.2",
+    "vite": "^7.1.4",
+    "vite-plugin-solid": "^2.11.8"
+  },
+  "dependencies": {
+    "@sfu-test/messaging": "*",
+    "@solidjs/router": "^0.16.1",
+    "mediasoup-client": "^3.18.7",
+    "solid-js": "^1.9.5"
+  }
+}

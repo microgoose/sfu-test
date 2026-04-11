@@ -1,0 +1,17 @@
+{
+  "name": "sfu-test",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=packages/server & npm run dev --workspace=packages/client",
+    "dev:client": "npm run dev --workspace=packages/client",
+    "dev:server": "npm run dev --workspace=packages/server"
+  },
+  "dependencies": {
+    "@sfu-test/messaging": "^1.0.0"
+  }
+}
