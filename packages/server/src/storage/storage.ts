@@ -12,6 +12,7 @@ export interface Room {
 
 export interface Participant {
     id: string;
+    name: string;
 }
 
 export interface RoomParticipant {
@@ -22,7 +23,7 @@ export interface RoomParticipant {
 
 export interface ProducerEntry {
     producer: Producer;
-    userId: string;
+    participantId: string;
     transportId: string;
 }
 
@@ -33,7 +34,7 @@ export interface ProducerEntry {
 const rooms         = new Map<string, Room>();
 const participants  = new Map<string, Participant>();
 const roomParts     = new Map<string, RoomParticipant>();   // key: `${roomId}:${participantId}`
-const routers       = new Map<string, Router>();            // key: mediasoup router id
+const routers       = new Map<string, Router>();            // key: media-messaging router id
 const transports    = new Map<string, WebRtcTransport>();   // key: transport id
 const producers     = new Map<string, ProducerEntry>();          // key: producer id
 const consumers     = new Map<string, Consumer>();          // key: consumer id
@@ -67,7 +68,7 @@ function indexRemove(index: Map<string, Set<string>>, key: string, value: string
 }
 
 // ---------------------------------------------------------------------------
-// Room
+// RoomPage
 // ---------------------------------------------------------------------------
 
 export function saveRoom(room: Room): void {
@@ -95,6 +96,11 @@ export function saveParticipant(participant: Participant): void {
 }
 
 export function findParticipantById(id: string): Participant | undefined {
+    // TODO
+    participants.set(id, {
+        id,
+        name: `participant-${id.slice(0, 4)}`,
+    });
     return participants.get(id);
 }
 
@@ -130,7 +136,7 @@ export function findRoomsByParticipant(participantId: string): Room[] {
     return result;
 }
 
-export function findParticipantsByRoom(roomId: string): Participant[] {
+export function findParticipantsByRoomId(roomId: string): Participant[] {
     const result: Participant[] = [];
     for (const rp of roomParts.values()) {
         if (rp.roomId !== roomId) continue;
@@ -191,27 +197,52 @@ export function findTransportsByRouter(routerId: string): WebRtcTransport[] {
         .filter(Boolean) as WebRtcTransport[];
 }
 
+export function findTransportsByRoomId(roomId: string): WebRtcTransport[] {
+    const router = findRouterByRoomId(roomId);
+    if (!router) return [];
+
+    return findTransportsByRouter(router.id);
+}
+
 export function findRouterByTransportId(transportId: string): Router | undefined {
     const routerId = routerByTransport.get(transportId);
     if (!routerId) return undefined;
     return routers.get(routerId);
 }
 
-export function deleteTransport(id: string, routerId: string): void {
+export function deleteTransport(id: string): void {
+    const routerId = routerByTransport.get(id);
+    if (!routerId) return;
+
+    // 1. удалить все producers
+    for (const producerId of idsFor(producersByTransport, id)) {
+        deleteProducer(producerId);
+    }
+
+    // 2. удалить все consumers
+    for (const consumerId of idsFor(consumersByTransport, id)) {
+        deleteConsumer(consumerId);
+    }
+
+    // 3. удалить сам transport
     transports.delete(id);
     indexRemove(transportsByRouter, routerId, id);
     routerByTransport.delete(id);
+
+    // 4. очистить индексы
+    producersByTransport.delete(id);
+    consumersByTransport.delete(id);
 }
 
 // ---------------------------------------------------------------------------
 // Producer
 // ---------------------------------------------------------------------------
 
-export function saveProducer(producer: Producer, transportId: string, userId: string): void {
+export function saveProducer(producer: Producer, transportId: string, participantId: string): void {
     producers.set(producer.id, {
         producer,
         transportId,
-        userId
+        participantId,
     });
     indexAdd(producersByTransport, transportId, producer.id);
 }
@@ -235,9 +266,12 @@ export function findProducersByRoom(roomId: string): ProducerEntry[] {
         .flatMap(t => findProducersByTransport(t.id));
 }
 
-export function deleteProducer(id: string, transportId: string): void {
+export function deleteProducer(id: string): void {
+    const entry = producers.get(id);
+    if (!entry) return;
+
     producers.delete(id);
-    indexRemove(producersByTransport, transportId, id);
+    indexRemove(producersByTransport, entry.transportId, id);
 }
 
 // ---------------------------------------------------------------------------
@@ -259,7 +293,16 @@ export function findConsumersByTransport(transportId: string): Consumer[] {
         .filter(Boolean) as Consumer[];
 }
 
-export function deleteConsumer(id: string, transportId: string): void {
+export function deleteConsumer(id: string): void {
+    if (!consumers.has(id)) return;
+
     consumers.delete(id);
-    indexRemove(consumersByTransport, transportId, id);
+
+    // найти transport через индекс
+    for (const [transportId, set] of consumersByTransport.entries()) {
+        if (set.has(id)) {
+            indexRemove(consumersByTransport, transportId, id);
+            break;
+        }
+    }
 }

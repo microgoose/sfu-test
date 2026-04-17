@@ -1,4 +1,4 @@
-import {Router, WebRtcServer, WebRtcTransport, Worker} from "mediasoup/types";
+import type {Router, WebRtcServer, WebRtcTransport, Worker} from "mediasoup/types";
 
 export interface WorkerEntry {
     worker: Worker;

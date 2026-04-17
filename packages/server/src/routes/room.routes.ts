@@ -1,10 +1,13 @@
 import {Router} from 'express';
-import * as roomService from '../service/room.service.ts';
+import * as roomService from '@/service/room.service.js';
 
 export const httpRoomRouter = Router()
-    .get('/', (_req, res) => {
-        console.debug('[Room Route] Get rooms');
-        res.json(roomService.getAllRooms());
+    .post('/create', (req, res) => {
+        console.debug(`[Room Route] Create room`);
+        // TODO
+        roomService
+            .createRoom(crypto.randomUUID(), 'anonymous.user')
+            .then((room) => res.json(room));
     })
     .get('/:id', (req, res) => {
         console.debug(`[Room Route] Get room ${req.params.id}`);

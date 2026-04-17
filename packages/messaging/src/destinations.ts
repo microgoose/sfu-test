@@ -8,6 +8,9 @@ export const destinations = {
         participantJoined: (roomId: string) => `room.${roomId}.participant.joined`,
         participantLeft: (roomId: string) => `room.${roomId}.participant.left`,
     },
+    router: {
+        getRtpCapabilities: (roomId: string) => `room.${roomId}.router.get-rtp-capabilities`,
+    },
     transport: {
         create: (roomId: string) => `room.${roomId}.transport.create`,
         connect: (roomId: string) => `room.${roomId}.transport.connect`,
@@ -16,6 +19,7 @@ export const destinations = {
         getList: (roomId: string) => `room.${roomId}.producer.get-list`,
         new: (roomId: string) => `room.${roomId}.producer.new`,
         create: (roomId: string) => `room.${roomId}.producer.create`,
+        close: (roomId: string) => `room.${roomId}.producer.close`,
     },
     consumer: {
         create: (roomId: string) => `room.${roomId}.consumer.create`,

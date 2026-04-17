@@ -1,8 +1,9 @@
 import {Client, IMessage, type StompSubscription} from '@stomp/stompjs';
-import {createRoomApi} from "./api/room.js";
-import {createTransportApi} from "./api/transport.js";
-import {createProducerApi} from "./api/producer.js";
-import {createConsumerApi} from "./api/consumer.js";
+import {createRoomMessaging} from "./api/room.js";
+import {createTransportMessaging} from "./api/transport.js";
+import {createProducerMessaging} from "./api/producer.js";
+import {createConsumerMessaging} from "./api/consumer.js";
+import {createRouterMessaging} from "./api/router.js";
 import {MessageHandler, RpcMessageHandler} from "./types.js";
 
 export type MessagingApi = ReturnType<typeof createMessaging>;
@@ -95,10 +96,11 @@ export const createStompAdapter = (client: Client) => ({
 });
 
 export const createMessaging = (stomp: StompAdapter) => ({
-    room: createRoomApi(stomp),
-    transport: createTransportApi(stomp),
-    producer: createProducerApi(stomp),
-    consumer: createConsumerApi(stomp),
+    room: createRoomMessaging(stomp),
+    transport: createTransportMessaging(stomp),
+    producer: createProducerMessaging(stomp),
+    consumer: createConsumerMessaging(stomp),
+    router: createRouterMessaging(stomp),
 });
 
 export function connectMessagingClient(client: Client): Promise<void> {

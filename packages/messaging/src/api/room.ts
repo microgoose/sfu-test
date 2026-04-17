@@ -2,20 +2,18 @@ import {destinations, toExchange, toTopic} from '../destinations.js';
 import {StompAdapter} from '../adapter.js';
 import {
     JoinRoomPayload,
-    JoinRoomResponse,
     LeaveRoomPayload,
     MessageHandler,
     ParticipantJoinedEvent,
     ParticipantLeftEvent,
-    RpcMessageHandler,
 } from '../types.js';
 
-export const createRoomApi = (stomp: StompAdapter) => ({
-    join: (roomId: string, payload: JoinRoomPayload): Promise<JoinRoomResponse> =>
-        stomp.request(toExchange(destinations.room.join(roomId)), payload),
+export const createRoomMessaging = (stomp: StompAdapter) => ({
+    join: (roomId: string, payload: JoinRoomPayload) =>
+        stomp.publish(toExchange(destinations.room.join(roomId)), payload),
 
-    onJoin: (roomId: string, handler: RpcMessageHandler<JoinRoomPayload, JoinRoomResponse>) =>
-        stomp.handle(toTopic(destinations.room.join(roomId)), handler),
+    onJoin: (roomId: string, handler: MessageHandler<JoinRoomPayload>) =>
+        stomp.subscribe(toTopic(destinations.room.join(roomId)), handler),
 
     leave: (roomId: string, payload: LeaveRoomPayload) =>
         stomp.publish(toExchange(destinations.room.leave(roomId)), payload),

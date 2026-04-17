@@ -7,8 +7,7 @@ import {
     RpcMessageHandler,
 } from '../types.js';
 
-export const createTransportApi = (stomp: StompAdapter) => ({
-    // Client → Server (RPC)
+export const createTransportMessaging = (stomp: StompAdapter) => ({
     create: (roomId: string): Promise<CreateTransportResponse> =>
         stomp.request(toExchange(destinations.transport.create(roomId))),
 

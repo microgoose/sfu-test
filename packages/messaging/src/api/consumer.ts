@@ -8,7 +8,7 @@ import {
     RpcMessageHandler,
 } from '../types.js';
 
-export const createConsumerApi = (stomp: StompAdapter) => ({
+export const createConsumerMessaging = (stomp: StompAdapter) => ({
     create: (roomId: string, payload: CreateConsumerPayload): Promise<CreateConsumerResponse> =>
         stomp.request(toExchange(destinations.consumer.create(roomId)), payload),
 

@@ -1,6 +1,7 @@
 import {destinations, toExchange, toTopic} from '../destinations.js';
 import {StompAdapter} from '../adapter.js';
 import {
+    CloseProducerEvent,
     CreateProducerPayload,
     CreateProducerResponse,
     MessageHandler,
@@ -9,7 +10,7 @@ import {
     RpcMessageHandler,
 } from '../types.js';
 
-export const createProducerApi = (stomp: StompAdapter) => ({
+export const createProducerMessaging = (stomp: StompAdapter) => ({
     create: (roomId: string, payload: CreateProducerPayload): Promise<CreateProducerResponse> =>
         stomp.request(toExchange(destinations.producer.create(roomId)), payload),
 
@@ -27,4 +28,10 @@ export const createProducerApi = (stomp: StompAdapter) => ({
 
     onNew: (roomId: string, handler: MessageHandler<NewProducerEvent>) =>
         stomp.subscribe(toTopic(destinations.producer.new(roomId)), handler),
+
+    publishClose: (roomId: string, payload: CloseProducerEvent) =>
+        stomp.publish(toExchange(destinations.producer.close(roomId)), payload),
+
+    onClose: (roomId: string, handler: MessageHandler<CloseProducerEvent>) =>
+        stomp.subscribe(toTopic(destinations.producer.close(roomId)), handler),
 });

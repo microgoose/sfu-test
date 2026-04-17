@@ -1,12 +1,8 @@
-import {DtlsParameters, MediaKind, RtpCapabilities, RtpParameters} from 'mediasoup/types';
-import {messaging} from '../infra/messaging/messaging-client.ts';
-import * as routerAdapter from '../infra/mediasoup/adapter/router.adapter.ts';
-import * as storage from '../storage/storage.ts';
-import {getWebRtcServer} from "@/infra/mediasoup/adapter/worker.adapter.ts";
-
-// ---------------------------------------------------------------------------
-// Room
-// ---------------------------------------------------------------------------
+import {messaging} from "@/infra/messaging/messaging-client.js";
+import {getWebRtcServer} from "@/infra/mediasoup/adapter/worker.adapter.js";
+import * as storage from '@/storage/storage.js';
+import * as routerAdapter from '@/infra/mediasoup/adapter/router.adapter.js';
+import type {DtlsParameters, MediaKind, RtpCapabilities, RtpParameters, WebRtcTransport} from "mediasoup/types";
 
 export function getRoomById(id: string) {
     const room = storage.findRoomById(id);
@@ -32,51 +28,37 @@ export function getRouterByRoomId(roomId: string) {
     return router;
 }
 
-export function getAllRooms() {
-    return storage.findAllRooms();
-}
-
-export async function createRoom(roomId: string, createdBy: string): Promise<void> {
+export async function createRoom(roomId: string, createdBy: string) {
+    console.log(`[RoomService] Create room id=${roomId}`);
     const router = await routerAdapter.createRouter();
     storage.saveRouter(router, roomId);
-    storage.saveRoom({ id: roomId, createdBy, routerId: router.id });
+    storage.saveRoom({id: roomId, createdBy, routerId: router.id});
     registerRoomRoutes(roomId);
-    console.log(`[RoomService] Room created id=${roomId}`);
+    return {roomId};
 }
-
-// ---------------------------------------------------------------------------
-// Participants
-// ---------------------------------------------------------------------------
 
 export function joinRoom(participantId: string, roomId: string) {
     const participant = storage.findParticipantById(participantId);
     if (!participant) throw new Error(`Participant ${participantId} not found`);
 
-    const room = getRoomById(roomId);
     storage.joinRoom(roomId, participantId);
+    messaging.room.publishParticipantJoined(roomId, participant);
+}
 
+export function leaveRoom(participantId: string, roomId: string) {
+    const transports = storage.findTransportsByRoomId(roomId);
+    transports.forEach(t => closeTransport(roomId, t.id));
+    storage.leaveRoom(roomId, participantId);
+
+    messaging.room.publishParticipantLeft(roomId, {participantId});
+}
+
+export async function getRtpCapabilities(roomId: string) {
+    const room = getRoomById(roomId);
     const router = storage.findRouterById(room.routerId);
     if (!router) throw new Error(`Router ${room.routerId} not found`);
-
-    messaging.room.publishParticipantJoined(roomId, { userId: participantId });
-    console.debug(`[RoomService] Participant ${participantId} joined room ${roomId}`);
     return router.rtpCapabilities;
 }
-
-export function leaveRoom(participantId: string) {
-    const rooms = storage.findRoomsByParticipant(participantId);
-    if (rooms.length === 0) throw new Error(`Participant ${participantId} is not in any room`);
-
-    for (const room of rooms) {
-        storage.leaveRoom(room.id, participantId);
-        messaging.room.publishParticipantLeft(room.id, { userId: participantId });
-        console.debug(`[RoomService] Participant ${participantId} left room ${room.id}`);
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Transport
-// ---------------------------------------------------------------------------
 
 export async function createTransport(roomId: string) {
     const room = getRoomById(roomId);
@@ -90,26 +72,38 @@ export async function createTransport(roomId: string) {
     });
 
     storage.saveTransport(transport, room.routerId);
+    registerTransportRoutes(roomId, transport);
 
-    const parameters = {
+    return {
         transportId: transport.id,
         iceParameters: transport.iceParameters,
         iceCandidates: transport.iceCandidates,
         dtlsParameters: transport.dtlsParameters,
         sctpParameters: transport.sctpParameters,
     };
-    console.debug(`[RoomService] Transport ${transport.id} created in room ${roomId}`);
-    return parameters;
 }
 
 export async function connectTransport(transportId: string, dtlsParameters: DtlsParameters) {
+    console.debug(`[RoomService] Connect transport ${transportId}`);
     await getTransport(transportId).connect({dtlsParameters});
-    console.debug(`[RoomService] Transport ${transportId} connected`);
 }
 
-// ---------------------------------------------------------------------------
-// Producer
-// ---------------------------------------------------------------------------
+export async function closeTransport(roomId: string, transportId: string) {
+    console.debug(`[RoomService] Close transport ${transportId}`);
+    const producers = storage.findProducersByTransport(transportId);
+    const transport = getTransport(transportId);
+
+    transport.close();
+    storage.deleteTransport(transportId);
+
+    messaging.producer.publishClose(roomId, {
+        producers: producers.map(p => ({
+            participantId: p.participantId,
+            producerId: p.producer.id,
+            kind: p.producer.kind,
+        })),
+    });
+}
 
 export async function createProducer(
     roomId: string,
@@ -118,6 +112,7 @@ export async function createProducer(
     kind: MediaKind,
     rtpParameters: RtpParameters,
 ) {
+    console.debug(`[RoomService] Create producer for transport ${transportId}`);
     getRoomById(roomId); // guard
     const transport = getTransport(transportId);
     const producer = await transport.produce({kind, rtpParameters});
@@ -125,33 +120,29 @@ export async function createProducer(
 
     messaging.producer.publishNew(roomId, {
         kind: producer.kind,
-        userId: participantId,
+        participantId,
         producerId: producer.id,
     });
-    console.debug(`[RoomService] Producer ${producer.id} created for transport ${transportId}`);
-    return { producerId: producer.id };
+    return {producerId: producer.id};
 }
 
 export function getRoomProducers(roomId: string) {
+    console.debug(`[RoomService] Get room producers for room ${roomId}`);
     return {
-        producers: storage.findProducersByRoom(roomId)
-            .map(({ producer, userId }) => ({
-                producerId: producer.id,
-                userId,
-                kind: producer.kind as 'audio' | 'video',
-            })),
+        producers: storage.findProducersByRoom(roomId).map(({producer, participantId}) => ({
+            producerId: producer.id,
+            participantId,
+            kind: producer.kind,
+        })),
     };
 }
-
-// ---------------------------------------------------------------------------
-// Consumer
-// ---------------------------------------------------------------------------
 
 export async function createConsumer(
     transportId: string,
     producerId: string,
     rtpCapabilities: RtpCapabilities,
 ) {
+    console.debug(`[RoomService] Create consumer for producer ${producerId}, transport ${transportId}`);
     const transport = getTransport(transportId);
     const router = getRouterByTransportId(transportId);
 
@@ -166,36 +157,35 @@ export async function createConsumer(
 
     storage.saveConsumer(consumer, transportId);
 
-    const parameters = {
+    return {
         consumerId: consumer.id,
         producerId: consumer.producerId,
         kind: consumer.kind,
         rtpParameters: consumer.rtpParameters,
     };
-    console.debug(`[RoomService] Consumer ${parameters.consumerId} created for transport ${transportId}`);
-    return parameters;
 }
 
 export async function resumeConsumer(consumerId: string): Promise<void> {
+    console.debug(`[RoomService] Resume consumer ${consumerId}`);
     const consumer = storage.findConsumerById(consumerId);
     if (!consumer) throw new Error(`Consumer ${consumerId} not found`);
     await consumer.resume();
-    console.debug(`[RoomService] Consumer resume ${consumerId}`);
 }
-
-// ---------------------------------------------------------------------------
-// Internal: messaging routes
-// ---------------------------------------------------------------------------
 
 function registerRoomRoutes(roomId: string): void {
     messaging.room.onJoin(roomId, (event) => {
-        console.debug(`[RoomService] Participant ${event.userId} joining room ${roomId}`);
-        return { rtpCapabilities: joinRoom(event.userId, roomId) };
+        console.debug(`[RoomService] Participant ${event.participantId} join room ${roomId}`);
+        joinRoom(event.participantId, roomId);
+    });
+
+    messaging.router.onGetRtpCapabilities(roomId, () => {
+        console.debug(`[RoomService] Get rtp capabilities ${roomId}`);
+        return getRtpCapabilities(roomId);
     });
 
     messaging.room.onLeave(roomId, (event) => {
-        console.debug(`[RoomService] Participant ${event.userId} leaving room ${roomId}`);
-        leaveRoom(event.userId);
+        console.debug(`[RoomService] Participant ${event.participantId} leaving room ${roomId}`);
+        leaveRoom(event.participantId, roomId);
     });
 
     messaging.transport.onCreate(roomId, () => {
@@ -206,12 +196,12 @@ function registerRoomRoutes(roomId: string): void {
     messaging.transport.onConnect(roomId, async (event) => {
         console.debug(`[RoomService] Connect transport ${event.transportId} from ${roomId}`);
         await connectTransport(event.transportId, event.dtlsParameters);
-        return { transportId: event.transportId };
+        return {transportId: event.transportId};
     });
 
     messaging.producer.onCreate(roomId, (event) => {
         console.debug(`[RoomService] Create producer for transport ${event.transportId}, kind ${event.kind}`);
-        return createProducer(roomId, event.userId, event.transportId, event.kind, event.rtpParameters);
+        return createProducer(roomId, event.participantId, event.transportId, event.kind, event.rtpParameters);
     });
 
     messaging.producer.onGetList(roomId, () => {
@@ -227,5 +217,15 @@ function registerRoomRoutes(roomId: string): void {
     messaging.consumer.onResume(roomId, (event) => {
         console.debug(`[RoomService] Resume consumer ${event.consumerId}`);
         return resumeConsumer(event.consumerId);
+    });
+}
+
+function registerTransportRoutes(roomId: string, transport: WebRtcTransport) {
+    transport.on('icestatechange', (iceState) => {
+        console.debug(`[Room Service] Transport ICE: ${transport.id} ${iceState}`);
+        // TODO задержка 30 сек +не факт что дисконет, может связь пропала
+        // TODO удалять участника из комнаты
+        if (iceState === 'disconnected')
+            closeTransport(roomId, transport.id);
     });
 }

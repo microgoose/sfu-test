@@ -1,11 +1,11 @@
 import * as mediasoup from 'mediasoup';
-import {WebRtcServer, Worker} from "mediasoup/types";
+import type {WebRtcServer, Worker} from "mediasoup/types";
 
 let worker: Worker | null = null;
 let webRtcServer: WebRtcServer | null = null;
 
 export async function createWorker(announcedAddress: string): Promise<void> {
-    console.debug('[Worker] Creating mediasoup worker');
+    console.debug('[Worker] Creating media-messaging worker');
 
     worker = await mediasoup.createWorker();
     webRtcServer = await worker.createWebRtcServer({

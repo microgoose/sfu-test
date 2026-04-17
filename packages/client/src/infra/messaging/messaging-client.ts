@@ -1,5 +1,9 @@
-import {createClient, createMessaging, createStompAdapter} from '@sfu-test/messaging';
+import {connectMessagingClient, createClient, createMessaging, createStompAdapter} from '@sfu-test/messaging';
 
-export const client = createClient('ws://localhost:15674/ws');
-const adapter = createStompAdapter(client);
-export const messaging = createMessaging(adapter);
+export async function setupMessagingClient(url: string) {
+    const client = createClient(url);
+    const adapter = createStompAdapter(client);
+    const messaging = createMessaging(adapter);
+    await connectMessagingClient(client);
+    return messaging;
+}

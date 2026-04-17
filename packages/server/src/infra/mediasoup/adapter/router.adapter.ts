@@ -1,5 +1,5 @@
-import {MEDIA_CODECS} from "../config.ts";
-import {getWorker} from "@/infra/mediasoup/adapter/worker.adapter.ts";
+import {getWorker} from "@/infra/mediasoup/adapter/worker.adapter.js";
+import {MEDIA_CODECS} from "@/infra/mediasoup/config.js";
 
 export async function createRouter() {
     const worker = getWorker();

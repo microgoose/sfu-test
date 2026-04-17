@@ -76,6 +76,7 @@ export function createRandomBallCanvasAnimation(
     const glowColor: string = options.glowColor ?? "rgba(255, 215, 95, 0.35)";
 
     function resizeCanvas(): void {
+        if (!canvas.isConnected) return;
         const rect = canvas.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
         const nextWidth = Math.max(1, Math.round(rect.width * dpr));
@@ -208,4 +209,33 @@ export function createRandomBallCanvasAnimation(
             return canvas.captureStream(frameRate);
         },
     };
+}
+
+export function canvasStream() {
+    let canvas: HTMLCanvasElement | null = null;
+    let animation: CanvasAnimation | null = null;
+
+    return { start, stop, getStream };
+
+    function start() {
+        if (!canvas) {
+            canvas = document.createElement("canvas");
+            canvas.width = 960;
+            canvas.height = 540;
+        }
+
+        animation = createRandomBallCanvasAnimation(canvas);
+    }
+
+    function stop() {
+        animation?.stop();
+        canvas?.remove();
+    }
+
+    function getStream() {
+        if (animation) {
+            return animation?.getStream();
+        }
+        throw new Error('No available stream');
+    }
 }

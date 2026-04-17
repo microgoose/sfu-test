@@ -1,6 +1,3 @@
-1. Не отписываемся от событий даже если комнату аннулировали
-2. не закрываем транспорты
-3. не удаляем видео когда left
-4. с createWorker какая то залупа
-5. rabbit connectHeaders: {login: 'guest', passcode: 'guest'}, страннно
-6. messaging Ошибки, надо настроить 404 500 403 и т д
+1. с createWorker какая то залупа
+2. rabbit connectHeaders: {login: 'guest', passcode: 'guest'}, страннно
+3. messaging Ошибки, надо настроить 404 500 403 и т д
