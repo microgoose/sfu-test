@@ -1,6 +1,7 @@
-import {canvasStream} from "@/service/media-stream/canvas-stream";
+import {canvasStream} from "@/service/user-media/canvas-stream";
 
 export class UserMediaService {
+
     async requestAudio() {
         if (!await this.hasDevice('audioinput'))
             throw new Error('No audio input provided');
@@ -11,7 +12,6 @@ export class UserMediaService {
 
     async requestVideo() {
         if (!await this.hasDevice('videoinput')) {
-            // TODO
             // throw new Error('No video input provided');
             const animation = canvasStream();
             animation.start();

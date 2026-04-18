@@ -1,5 +1,5 @@
 import {destinations, toExchange, toTopic} from '../destinations.js';
-import {StompAdapter} from '../adapter.js';
+import {StompAdapter} from '../client.js';
 import {
     CloseProducerEvent,
     CreateProducerPayload,
@@ -10,28 +10,28 @@ import {
     RpcMessageHandler,
 } from '../types.js';
 
-export const createProducerMessaging = (stomp: StompAdapter) => ({
+export const createProducerMessaging = (adapter: StompAdapter) => ({
     create: (roomId: string, payload: CreateProducerPayload): Promise<CreateProducerResponse> =>
-        stomp.request(toExchange(destinations.producer.create(roomId)), payload),
+        adapter.request(toExchange(destinations.producer.create(roomId)), payload),
 
     onCreate: (roomId: string, handler: RpcMessageHandler<CreateProducerPayload, CreateProducerResponse>) =>
-        stomp.handle(toTopic(destinations.producer.create(roomId)), handler),
+        adapter.handle(toTopic(destinations.producer.create(roomId)), handler),
 
     getList: (roomId: string): Promise<ProducerListResponse> =>
-        stomp.request(toExchange(destinations.producer.getList(roomId))),
+        adapter.request(toExchange(destinations.producer.getList(roomId))),
 
     onGetList: (roomId: string, handler: RpcMessageHandler<undefined, ProducerListResponse>) =>
-        stomp.handle(toTopic(destinations.producer.getList(roomId)), handler),
+        adapter.handle(toTopic(destinations.producer.getList(roomId)), handler),
 
     publishNew: (roomId: string, payload: NewProducerEvent) =>
-        stomp.publish(toExchange(destinations.producer.new(roomId)), payload),
+        adapter.publish(toExchange(destinations.producer.new(roomId)), payload),
 
     onNew: (roomId: string, handler: MessageHandler<NewProducerEvent>) =>
-        stomp.subscribe(toTopic(destinations.producer.new(roomId)), handler),
+        adapter.subscribe(toTopic(destinations.producer.new(roomId)), handler),
 
     publishClose: (roomId: string, payload: CloseProducerEvent) =>
-        stomp.publish(toExchange(destinations.producer.close(roomId)), payload),
+        adapter.publish(toExchange(destinations.producer.close(roomId)), payload),
 
     onClose: (roomId: string, handler: MessageHandler<CloseProducerEvent>) =>
-        stomp.subscribe(toTopic(destinations.producer.close(roomId)), handler),
+        adapter.subscribe(toTopic(destinations.producer.close(roomId)), handler),
 });

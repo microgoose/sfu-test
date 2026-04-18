@@ -166,7 +166,6 @@ export async function createConsumer(
 }
 
 export async function resumeConsumer(consumerId: string): Promise<void> {
-    console.debug(`[RoomService] Resume consumer ${consumerId}`);
     const consumer = storage.findConsumerById(consumerId);
     if (!consumer) throw new Error(`Consumer ${consumerId} not found`);
     await consumer.resume();

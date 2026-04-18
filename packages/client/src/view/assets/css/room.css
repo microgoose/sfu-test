@@ -28,6 +28,12 @@
     background: #05081f;
 }
 
+.room-video__preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .room-card-label {
     position: absolute;
     left: 8px;

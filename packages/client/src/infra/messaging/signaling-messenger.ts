@@ -4,7 +4,7 @@ import {
     CreateConsumerPayload,
     CreateProducerPayload,
     MessageHandler,
-    MessagingApi,
+    MessagingClient,
     NewProducerEvent,
     ResumeConsumerPayload
 } from "@sfu-test/messaging";
@@ -13,7 +13,7 @@ export class SignalingMessenger {
     private readonly roomId;
     private readonly client;
 
-    constructor(client: MessagingApi, roomId: string) {
+    constructor(client: MessagingClient, roomId: string) {
         this.roomId = roomId;
         this.client = client;
     }

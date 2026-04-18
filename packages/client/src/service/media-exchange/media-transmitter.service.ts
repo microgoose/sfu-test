@@ -9,7 +9,6 @@ export class MediaTransmitterService {
     private sendTransport: Transport | null = null;
 
     constructor(signalingMessenger: SignalingMessenger, userService: UserService) {
-        console.debug("Create send transport");
         this.signalingMessenger = signalingMessenger;
         this.userService = userService;
     }
@@ -21,6 +20,7 @@ export class MediaTransmitterService {
     }
 
     create(device: Device, options: TransportOptions) {
+        console.debug("Create send transport");
         const transport = (this.sendTransport = device.createSendTransport(options));
 
         this.sendTransport.on("connect", ({dtlsParameters}, callback, errback) => {

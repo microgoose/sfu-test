@@ -6,13 +6,13 @@ import {createConsumerMessaging} from "./api/consumer.js";
 import {createRouterMessaging} from "./api/router.js";
 import {MessageHandler, RpcMessageHandler} from "./types.js";
 
-export type MessagingApi = ReturnType<typeof createMessaging>;
+export type MessagingClient = ReturnType<typeof createMessaging>;
 export type StompAdapter = ReturnType<typeof createStompAdapter>;
 
-export function createClient(brokerURL: string) {
+export function createClient(brokerURL: string, login: string, passcode: string) {
     return new Client({
         brokerURL,
-        connectHeaders: {login: 'guest', passcode: 'guest'},
+        connectHeaders: { login, passcode },
         reconnectDelay: 3000,
 
         onDisconnect: (frame) => {
@@ -95,18 +95,22 @@ export const createStompAdapter = (client: Client) => ({
     },
 });
 
-export const createMessaging = (stomp: StompAdapter) => ({
-    room: createRoomMessaging(stomp),
-    transport: createTransportMessaging(stomp),
-    producer: createProducerMessaging(stomp),
-    consumer: createConsumerMessaging(stomp),
-    router: createRouterMessaging(stomp),
+export const createMessaging = (adapter: StompAdapter) => ({
+    room: createRoomMessaging(adapter),
+    transport: createTransportMessaging(adapter),
+    producer: createProducerMessaging(adapter),
+    consumer: createConsumerMessaging(adapter),
+    router: createRouterMessaging(adapter),
 });
 
 export function connectMessagingClient(client: Client): Promise<void> {
     return new Promise((resolve, reject) => {
+        if (client.active)
+            resolve();
+
         client.onConnect = () => {
-            console.debug('[Messaging Client] Connected'); resolve();
+            console.debug('[Messaging Client] Connected');
+            resolve();
         };
 
         client.onStompError = (frame) => {

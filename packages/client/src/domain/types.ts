@@ -6,7 +6,8 @@ export interface User {
 }
 
 export interface Participant extends User {
-    media?: MediaStream;
+    videoTrack?: MediaStreamTrack;
+    audioTrack?: MediaStreamTrack;
 }
 
 export interface ParticipantMediaTrack {

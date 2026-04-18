@@ -1,5 +1,5 @@
 import {destinations, toExchange, toTopic} from '../destinations.js';
-import {StompAdapter} from '../adapter.js';
+import {StompAdapter} from '../client.js';
 import {
     CreateConsumerPayload,
     CreateConsumerResponse,
@@ -8,16 +8,16 @@ import {
     RpcMessageHandler,
 } from '../types.js';
 
-export const createConsumerMessaging = (stomp: StompAdapter) => ({
+export const createConsumerMessaging = (adapter: StompAdapter) => ({
     create: (roomId: string, payload: CreateConsumerPayload): Promise<CreateConsumerResponse> =>
-        stomp.request(toExchange(destinations.consumer.create(roomId)), payload),
+        adapter.request(toExchange(destinations.consumer.create(roomId)), payload),
 
     onCreate: (roomId: string, handler: RpcMessageHandler<CreateConsumerPayload, CreateConsumerResponse>) =>
-        stomp.handle(toTopic(destinations.consumer.create(roomId)), handler),
+        adapter.handle(toTopic(destinations.consumer.create(roomId)), handler),
 
     resume: (roomId: string, payload: ResumeConsumerPayload) =>
-        stomp.publish(toExchange(destinations.consumer.resume(roomId)), payload),
+        adapter.publish(toExchange(destinations.consumer.resume(roomId)), payload),
 
     onResume: (roomId: string, payload: MessageHandler<ResumeConsumerPayload>) =>
-        stomp.subscribe(toExchange(destinations.consumer.resume(roomId)), payload),
+        adapter.subscribe(toExchange(destinations.consumer.resume(roomId)), payload),
 });

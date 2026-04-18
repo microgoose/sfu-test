@@ -4,8 +4,10 @@ import {SignalingMessenger} from "@/infra/messaging/signaling-messenger";
 import {ParticipantMediaTrack} from "@/domain/types";
 import {CloseProducerEvent, NewProducerEvent, ProducerListResponse} from "@sfu-test/messaging";
 
-type NewTrackHandler = (entry: ParticipantMediaTrack) => void;
-type RemoveTrackHandler = (entry: {participantId: string; producerId: string; kind: MediaKind;}) => void;
+export type NewTrackEvent = {participantId: string; producerId: string; kind: MediaKind; track: MediaStreamTrack};
+export type NewTrackHandler = (event: NewTrackEvent) => void;
+export type RemoveTrackEvent = {participantId: string; producerId: string; kind: MediaKind;};
+export type RemoveTrackHandler = (event: RemoveTrackEvent) => void;
 
 export class MediaReceiverService {
     private readonly signalingMessenger;
@@ -18,11 +20,11 @@ export class MediaReceiverService {
     private removeTrackHandler: RemoveTrackHandler = () => {};
 
     constructor(signalingMessenger: SignalingMessenger) {
-        console.debug("Create recv transport");
         this.signalingMessenger = signalingMessenger;
     }
 
     create(device: Device, options: TransportOptions) {
+        console.debug("Create recv transport");
         this.recvRtpCapabilities = device.recvRtpCapabilities;
         this.recvTransport = device.createRecvTransport(options);
 
