@@ -1,8 +1,7 @@
 import {Consumer, MediaKind, RtpCapabilities, Transport, TransportOptions} from "mediasoup-client/types";
 import {Device} from "mediasoup-client";
-import {SignalingMessenger} from "@/infra/messaging/signaling-messenger";
-import {ParticipantMediaTrack} from "@/domain/types";
-import {CloseProducerEvent, NewProducerEvent, ProducerListResponse} from "@sfu-test/messaging";
+import {ParticipantMediaTrack} from "@/domain/model";
+import {CloseProducersEvent, MessagingSocket, NewProducerEvent, ProducerListResponse} from "@sfu-test/messaging";
 
 export type NewTrackEvent = {participantId: string; producerId: string; kind: MediaKind; track: MediaStreamTrack};
 export type NewTrackHandler = (event: NewTrackEvent) => void;
@@ -19,11 +18,11 @@ export class MediaReceiverService {
     private newTrackHandler: NewTrackHandler = () => {};
     private removeTrackHandler: RemoveTrackHandler = () => {};
 
-    constructor(signalingMessenger: SignalingMessenger) {
+    constructor(signalingMessenger: MessagingSocket) {
         this.signalingMessenger = signalingMessenger;
     }
 
-    create(device: Device, options: TransportOptions) {
+    create(roomId: string, device: Device, options: TransportOptions) {
         console.debug("Create recv transport");
         this.recvRtpCapabilities = device.recvRtpCapabilities;
         this.recvTransport = device.createRecvTransport(options);
@@ -32,18 +31,18 @@ export class MediaReceiverService {
             const transport = this.getTransport();
             console.debug(`Connect recv transport ${transport.id}`);
             this.signalingMessenger
-                .connectTransport({ transportId: transport.id, dtlsParameters })
+                .connectTransport({ roomId, transportId: transport.id, dtlsParameters })
                 .then(callback)
                 .catch(errback);
         });
 
         this.signalingMessenger
-            .getProducersList()
-            .then((response) => this.handleNewProducers(response));
+            .getProducersList({ roomId })
+            .then(({body}) => this.handleNewProducers(body));
         this.signalingMessenger
-            .onNewProducer((event) => this.handleNewProducer(event));
+            .onNewProducer(({body}) => this.handleNewProducer(body));
         this.signalingMessenger
-            .onProducersClose((event) => this.handleRemoveProducers(event));
+            .onCloseProducers(({body}) => this.handleRemoveProducers(body));
     }
 
     close() {
@@ -91,7 +90,7 @@ export class MediaReceiverService {
         const transport = this.getTransport();
         const recvRtpCapabilities = this.getRecvRtpCapabilities();
 
-        const consumerParams = await this.signalingMessenger.createConsumer({
+        const {body: consumerParams} = await this.signalingMessenger.createConsumer({
             transportId: transport.id,
             producerId,
             recvRtpCapabilities,
@@ -110,7 +109,7 @@ export class MediaReceiverService {
         this.signalingMessenger.resumeConsumer({ consumerId: consumer.id });
     }
 
-    private handleRemoveProducers(event: CloseProducerEvent) {
+    private handleRemoveProducers(event: CloseProducersEvent) {
         for (const producer of event.producers) {
             const consumer = this.consumersByProducerId.get(producer.producerId);
             if (!consumer) continue;

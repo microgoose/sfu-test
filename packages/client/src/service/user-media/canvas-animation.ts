@@ -1,11 +1,13 @@
+import {VIDEO_HEIGHT, VIDEO_WIDTH} from "@/domain/media.config";
+
 export interface RandomBallOptions {
     radius: number;
     speed: number;
     backgroundColor: string;
     ballColor: string;
     glowColor: string;
-    height: string;
-    width: string;
+    height: number;
+    width: number;
 }
 
 export const RANDOM_BALL_OPTIONS: RandomBallOptions = {
@@ -14,8 +16,8 @@ export const RANDOM_BALL_OPTIONS: RandomBallOptions = {
     backgroundColor: "#071133",
     ballColor: "#ffd75f",
     glowColor: "rgba(255, 215, 95, 0.35)",
-    height: '300px',
-    width: '300px'
+    height: VIDEO_HEIGHT,
+    width: VIDEO_WIDTH,
 };
 
 interface BallState {
@@ -211,7 +213,7 @@ export function createRandomBallCanvasAnimation(
     };
 }
 
-export function canvasStream() {
+export function createCanvasAnimation() {
     let canvas: HTMLCanvasElement | null = null;
     let animation: CanvasAnimation | null = null;
 
@@ -220,8 +222,8 @@ export function canvasStream() {
     function start() {
         if (!canvas) {
             canvas = document.createElement("canvas");
-            canvas.width = 960;
-            canvas.height = 540;
+            canvas.width = RANDOM_BALL_OPTIONS.width;
+            canvas.height = RANDOM_BALL_OPTIONS.height;
         }
 
         animation = createRandomBallCanvasAnimation(canvas);

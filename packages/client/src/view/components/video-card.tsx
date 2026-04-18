@@ -1,6 +1,6 @@
 import {createEffect, onCleanup, Show} from "solid-js";
 import {VideoCardPreview} from "@/view/components/video-card-preview";
-import {Participant} from "@/domain/types";
+import {Participant} from "@/domain/model";
 
 interface VideoCardProps {
     participant: Participant

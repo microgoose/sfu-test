@@ -1,9 +1,9 @@
 import {Device} from "mediasoup-client";
-import {SignalingMessenger} from "@/infra/messaging/signaling-messenger";
 import {MediaTransmitterService} from "@/service/media-exchange/media-transmitter.service";
 import {MediaReceiverService, NewTrackEvent, RemoveTrackEvent} from "@/service/media-exchange/media-receiver.service";
 import {UserMediaService} from "@/service/user-media/user-media.service";
 import {resetTrack, setTrack} from "@/service/room-participant/participants.store";
+import {MessagingSocket} from "@sfu-test/messaging";
 
 export class MediaExchangeService {
     private readonly device = new Device();
@@ -13,7 +13,7 @@ export class MediaExchangeService {
     private readonly userMediaService;
 
     constructor(
-        signalingMessenger: SignalingMessenger,
+        signalingMessenger: MessagingSocket,
         transmitterService: MediaTransmitterService,
         receiverService: MediaReceiverService,
         userMediaService: UserMediaService,
@@ -24,22 +24,22 @@ export class MediaExchangeService {
         this.userMediaService = userMediaService;
     }
 
-    async open() {
+    async open(roomId: string) {
         console.debug("Open media exchange");
-        const routerRtpCapabilities = await this.signalingMessenger.getRtpCapabilities();
+        const {body: routerRtpCapabilities} = await this.signalingMessenger.getRouterRtpCapabilities({ roomId });
         await this.device.load({routerRtpCapabilities});
 
-        const sendTransportParams = await this.signalingMessenger.createTransport();
-        const localTransportParams = await this.signalingMessenger.createTransport();
+        const {body: sendTransportParams} = await this.signalingMessenger.createTransport({ roomId });
+        const {body: localTransportParams} = await this.signalingMessenger.createTransport({ roomId });
 
-        this.transmitterService.create(this.device, {
+        this.transmitterService.create(roomId, this.device, {
             id: sendTransportParams.transportId,
             iceParameters: sendTransportParams.iceParameters,
             iceCandidates: sendTransportParams.iceCandidates,
             dtlsParameters: sendTransportParams.dtlsParameters,
         });
 
-        this.receiverService.create(this.device, {
+        this.receiverService.create(roomId, this.device, {
             id: localTransportParams.transportId,
             iceParameters: localTransportParams.iceParameters,
             iceCandidates: localTransportParams.iceCandidates,

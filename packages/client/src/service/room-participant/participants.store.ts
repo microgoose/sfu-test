@@ -1,5 +1,5 @@
 import {createStore} from "solid-js/store";
-import {Participant} from "@/domain/types";
+import {Participant} from "@/domain/model";
 import {MediaKind} from "mediasoup-client/types";
 
 interface ParticipantsStore {
@@ -12,6 +12,10 @@ const [store, setState] = createStore<ParticipantsStore>({
 
 export const participantStore = store;
 
+export function clearParticipants() {
+    setState('participants', []);
+}
+
 export function addParticipant(participant: Participant) {
     setState('participants', participants => ([
         ...participants,
@@ -23,10 +27,6 @@ export function removeParticipant(participantId: string) {
     setState('participants', participants =>
         participants.filter((p) => p.id !== participantId)
     );
-}
-
-export function clearParticipants() {
-    setState('participants', []);
 }
 
 export function setTrack(participantId: string, track: MediaStreamTrack) {

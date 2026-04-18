@@ -1,4 +1,5 @@
-import {canvasStream} from "@/service/user-media/canvas-stream";
+import {createCanvasAnimation} from "@/service/user-media/canvas-animation";
+import {VIDEO_FRAMERATE, VIDEO_HEIGHT, VIDEO_WIDTH} from "@/domain/media.config";
 
 export class UserMediaService {
 
@@ -13,13 +14,21 @@ export class UserMediaService {
     async requestVideo() {
         if (!await this.hasDevice('videoinput')) {
             // throw new Error('No video input provided');
-            const animation = canvasStream();
+            const animation = createCanvasAnimation();
             animation.start();
             return animation.getStream().getVideoTracks()[0];
         }
 
-        return navigator.mediaDevices.getUserMedia({ video: true })
-            .then((stream: MediaStream) => stream.getVideoTracks()[0]);
+        const options = {
+            video: {
+                width:  { ideal: VIDEO_WIDTH },
+                height: { ideal: VIDEO_HEIGHT },
+                frameRate: { ideal: VIDEO_FRAMERATE }
+            }
+        };
+        return navigator.mediaDevices
+            .getUserMedia(options)
+            .then((stream) => stream.getVideoTracks()[0]);
     }
 
     async hasDevice(kind: 'videoinput' | 'audioinput'): Promise<boolean> {

@@ -1,14 +1,14 @@
 import {Transport, TransportOptions} from "mediasoup-client/types";
 import {Device} from "mediasoup-client";
-import {SignalingMessenger} from "@/infra/messaging/signaling-messenger";
 import {UserService} from "@/service/user.service";
+import {MessagingSocket} from "@sfu-test/messaging";
 
 export class MediaTransmitterService {
     private readonly signalingMessenger;
     private readonly userService;
     private sendTransport: Transport | null = null;
 
-    constructor(signalingMessenger: SignalingMessenger, userService: UserService) {
+    constructor(signalingMessenger: MessagingSocket, userService: UserService) {
         this.signalingMessenger = signalingMessenger;
         this.userService = userService;
     }
@@ -19,26 +19,26 @@ export class MediaTransmitterService {
         throw new Error("Transport is not installed");
     }
 
-    create(device: Device, options: TransportOptions) {
+    create(roomId: string, device: Device, options: TransportOptions) {
         console.debug("Create send transport");
         const transport = (this.sendTransport = device.createSendTransport(options));
 
         this.sendTransport.on("connect", ({dtlsParameters}, callback, errback) => {
             console.debug(`Connect send transport ${transport.id}`);
             this.signalingMessenger
-                .connectTransport({transportId: transport.id, dtlsParameters})
+                .connectTransport({roomId, transportId: transport.id, dtlsParameters})
                 .then(callback)
                 .catch(errback);
         });
 
         this.sendTransport.on("produce", ({kind, rtpParameters}, callback, errback) => {
             const user = this.userService.getUser();
-            const request = {participantId: user.id, transportId: transport.id, kind, rtpParameters};
+            const request = {roomId, participantId: user.id, transportId: transport.id, kind, rtpParameters};
             this.signalingMessenger
                 .createProducer(request)
-                .then((response) => {
-                    console.debug(`Produce ${kind}, producer ${response.producerId}, transport ${transport.id}`);
-                    callback({id: response.producerId})
+                .then(({ body }) => {
+                    console.debug(`Produce ${kind}, producer ${body.producerId}, transport ${transport.id}`);
+                    callback({id: body.producerId})
                 })
                 .catch(errback);
         });

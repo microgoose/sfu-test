@@ -1,7 +1,7 @@
 {
   "name": "@sfu-test/messaging",
   "version": "1.0.0",
-  "description": "Shared STOMP/WebSocket messaging layer for client and server",
+  "description": "Shared messaging layer for client and server",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,11 +15,7 @@
     "build": "tsc",
     "dev": "tsc --watch"
   },
-  "dependencies": {
-    "@stomp/stompjs": "^7.3.0"
-  },
   "devDependencies": {
-    "@types/node": "^22.0.0",
     "typescript": "^5.8.3"
   }
 }

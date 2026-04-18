@@ -1,6 +1,6 @@
 import {For} from "solid-js";
 import {RoomCard} from "@/view/components/room-card";
-import {Participant} from "@/domain/types";
+import {Participant} from "@/domain/model";
 
 interface RoomCardListProps {
     participants: Participant[]

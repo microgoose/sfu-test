@@ -1,33 +1,39 @@
-export type MessageHandler<T> = (payload: T) => void;
-export type RpcMessageHandler<Req, Res> = (payload: Req) => Res | Promise<Res>;
+// --- Common ---
+export type MediaKind           = 'audio' | 'video';
+export type RtpCapabilities     = object;
+export type IceParameters       = any;
+export type IceCandidates       = any;
+export type DtlsParameters      = any;
+export type RtpParameters       = any;
 
-export type Participant = { id: string, name: string }
-export type MediaKind = 'audio' | 'video';
-export type Producer = { producerId: string; participantId: string; kind: MediaKind }
-export type RtpCapabilities = object;
+export interface  Participant   { id: string, name: string }
+export interface  Producer      { producerId: string; participantId: string; kind: MediaKind }
 
 // --- Room ---
-export type JoinRoomPayload         = { participantId: string };
-export type LeaveRoomPayload        = { participantId: string };
-export type ParticipantJoinedEvent  = Participant;
-export type ParticipantLeftEvent    = { participantId: string };
+export interface  JoinRoomRequest             { roomId: string, participantId: string }
+export interface  LeaveRoomRequest            { roomId: string, participantId: string }
+export interface  ParticipantJoinedEvent      { participant: Participant }
+export interface  ParticipantLeftEvent        { participantId: string }
 
 // --- Router ---
-export type RtpCapabilitiesResponse = RtpCapabilities;
+export interface GetRtpCapabilitiesRequest   { roomId: string }
+export interface RtpCapabilitiesResponse     { rtpCapabilities: RtpCapabilities }
 
 // --- Transport ---
-export interface CreateTransportResponse    { transportId: string; iceParameters: any; iceCandidates: any[]; dtlsParameters: any }
-export interface ConnectTransportPayload    { transportId: string; dtlsParameters: any }
+export interface CreateTransportRequest     { roomId: string }
+export interface CreateTransportResponse    { transportId: string; iceParameters: IceParameters; iceCandidates: IceCandidates; dtlsParameters: DtlsParameters }
+export interface ConnectTransportRequest    { roomId: string, transportId: string; dtlsParameters: DtlsParameters }
 export interface ConnectTransportResponse   { transportId: string }
 
 // --- Producer ---
-export interface CreateProducerPayload  { transportId: string; participantId: string; kind: MediaKind; rtpParameters: any }
-export interface CreateProducerResponse { producerId: string }
-export interface NewProducerEvent       { producerId: string; participantId: string; kind: MediaKind }
-export interface ProducerListResponse   { producers: Producer[] }
-export interface CloseProducerEvent     { producers: Producer[] }
+export interface CreateProducerRequest      { roomId: string, transportId: string; participantId: string; kind: MediaKind; rtpParameters: RtpParameters }
+export interface CreateProducerResponse     { producerId: string }
+export interface NewProducerEvent           { producerId: string; participantId: string; kind: MediaKind }
+export interface GetProducerListRequest     { roomId: string }
+export interface ProducerListResponse       { producers: Producer[] }
+export interface CloseProducersEvent        { producers: Producer[] }
 
 // --- Consumer ---
-export interface CreateConsumerPayload  { producerId: string; transportId: string; recvRtpCapabilities: RtpCapabilities }
-export interface CreateConsumerResponse { consumerId: string; producerId: string; kind: MediaKind; rtpParameters: any }
-export interface ResumeConsumerPayload  { consumerId: string }
+export interface CreateConsumerRequest  { producerId: string; transportId: string; recvRtpCapabilities: RtpCapabilities }
+export interface CreateConsumerResponse { consumerId: string; producerId: string; kind: MediaKind; rtpParameters: RtpParameters }
+export interface ResumeConsumerRequest  { consumerId: string }

@@ -1,4 +1,4 @@
-import {Participant} from "@/domain/types";
+import {Participant} from "@/domain/model";
 import {VideoCard} from "@/view/components/video-card";
 
 interface RoomCardProps {
