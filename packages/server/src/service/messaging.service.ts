@@ -29,7 +29,7 @@ function broadcastToRoom(roomId: string, callback: (socket: MessagingSocket) => 
     for (let participant of participants) {
         const socket = sockets.get(participant.id);
         if (!socket) {
-            console.warn(`[Messaging Serice] Socket ${participant.id} not found`);
+            console.warn(`[Messaging Service] Socket ${participant.id} not found`);
             continue;
         }
 

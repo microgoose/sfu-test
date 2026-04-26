@@ -17,17 +17,33 @@ export async function createRoom(roomId: string, createdBy: string) {
     return {roomId};
 }
 
-export function joinRoom(participantId: string, roomId: string) {
+export async function joinRoom(participantId: string, roomId: string) {
     const participant = storage.findParticipantById(participantId);
     if (!participant) throw new Error(`Participant ${participantId} not found`);
 
+    const room = storage.findRoomById(roomId);
+    if (!room)
+        await createRoom(roomId, participantId);
+
     storage.joinRoom(roomId, participantId);
     publishParticipantJoined(roomId, {participant});
+    const participants = storage.findParticipantsByRoomId(roomId);
+
+    return {
+        roomId: roomId,
+        participants: participants,
+    };
 }
 
 export function leaveRoom(participantId: string, roomId: string) {
-    const transports = storage.findTransportsByRoomId(roomId);
+    const transports = storage.findTransportsByParticipantId(participantId);
     transports.forEach(t => closeTransport(roomId, t.id));
     storage.leaveRoom(roomId, participantId);
     publishParticipantLeft(roomId, {participantId});
+}
+
+export function leaveAllRooms(participantId: string) {
+    storage
+        .findRoomsByParticipantId(participantId)
+        .forEach((room) => leaveRoom(participantId, room.id));
 }

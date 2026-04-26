@@ -40,6 +40,7 @@ const producers     = new Map<string, ProducerEntry>();          // key: produce
 const consumers     = new Map<string, Consumer>();          // key: consumer id
 
 // secondary indexes
+const transportsByParticipant  = new Map<string, Set<string>>(); // participantID    -> transportId[]
 const transportsByRouter  = new Map<string, Set<string>>(); // routerId    -> transportId[]
 const routerByTransport   = new Map<string, string>();      // transportId -> routerId
 const routerByRoom        = new Map<string, string>();      // roomId      -> routerId
@@ -126,7 +127,7 @@ export function isInRoom(roomId: string, participantId: string): boolean {
     return roomParts.has(rpKey(roomId, participantId));
 }
 
-export function findRoomsByParticipant(participantId: string): Room[] {
+export function findRoomsByParticipantId(participantId: string): Room[] {
     const result: Room[] = [];
     for (const rp of roomParts.values()) {
         if (rp.participantId !== participantId) continue;
@@ -181,9 +182,10 @@ export function findRoomByRouterId(routerId: string): Room | undefined {
 // Transport
 // ---------------------------------------------------------------------------
 
-export function saveTransport(transport: WebRtcTransport, routerId: string): void {
+export function saveTransport(transport: WebRtcTransport, participantId: string, routerId: string): void {
     transports.set(transport.id, transport);
     indexAdd(transportsByRouter, routerId, transport.id);
+    indexAdd(transportsByParticipant, participantId, transport.id);
     routerByTransport.set(transport.id, routerId);
 }
 
@@ -202,6 +204,12 @@ export function findTransportsByRoomId(roomId: string): WebRtcTransport[] {
     if (!router) return [];
 
     return findTransportsByRouter(router.id);
+}
+
+export function findTransportsByParticipantId(participantId: string): WebRtcTransport[] {
+    return idsFor(transportsByParticipant, participantId)
+        .map(id => transports.get(id))
+        .filter(Boolean) as WebRtcTransport[];
 }
 
 export function findRouterByTransportId(transportId: string): Router | undefined {

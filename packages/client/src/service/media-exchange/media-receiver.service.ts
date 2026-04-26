@@ -38,11 +38,11 @@ export class MediaReceiverService {
 
         this.signalingMessenger
             .getProducersList({ roomId })
-            .then(({body}) => this.handleNewProducers(body));
+            .then((response) => this.handleNewProducers(response));
         this.signalingMessenger
-            .onNewProducer(({body}) => this.handleNewProducer(body));
+            .onNewProducer((response) => this.handleNewProducer(response));
         this.signalingMessenger
-            .onCloseProducers(async ({body}) => this.handleRemoveProducers(body));
+            .onCloseProducers((response) => this.handleRemoveProducers(response));
     }
 
     close() {
@@ -90,7 +90,7 @@ export class MediaReceiverService {
         const transport = this.getTransport();
         const recvRtpCapabilities = this.getRecvRtpCapabilities();
 
-        const {body: consumerParams} = await this.signalingMessenger.createConsumer({
+        const consumerParams = await this.signalingMessenger.createConsumer({
             transportId: transport.id,
             producerId,
             recvRtpCapabilities,

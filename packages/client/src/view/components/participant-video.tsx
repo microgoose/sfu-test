@@ -1,6 +1,6 @@
 import {createEffect, onCleanup, Show} from "solid-js";
 import {VideoCardPreview} from "@/view/components/video-card-preview";
-import {Participant} from "@/service/participants.store";
+import {Participant} from "@/service/room-participant/participants.store";
 
 interface VideoCardProps {
     participant: Participant;
@@ -20,7 +20,7 @@ export const ParticipantVideo = (props: VideoCardProps) => {
     });
 
     onCleanup(() => {
-        videoRef.srcObject = null;
+        if (videoRef) videoRef.srcObject = null;
     });
 
     return (

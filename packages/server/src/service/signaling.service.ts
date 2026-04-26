@@ -29,7 +29,7 @@ export async function getRtpCapabilities(roomId: string) {
     return {rtpCapabilities: router.rtpCapabilities};
 }
 
-export async function createTransport(roomId: string) {
+export async function createTransport(participantId: string, roomId: string) {
     const room = getRoomById(roomId);
     const router = getRouterByRoomId(roomId);
     const webRtcServer = getWebRtcServer();
@@ -40,7 +40,7 @@ export async function createTransport(roomId: string) {
         enableTcp: false,
     });
 
-    storage.saveTransport(transport, room.routerId);
+    storage.saveTransport(transport, participantId, room.routerId);
 
     return {
         transportId: transport.id,

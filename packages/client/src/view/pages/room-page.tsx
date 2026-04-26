@@ -1,9 +1,9 @@
 import '../assets/css/room.css';
 import {useParams} from "@solidjs/router";
-import {RoomCardList} from "@/view/components/room-card-list";
 import {createResource, Show} from "solid-js";
 import {createRoomService, RoomContext} from "@/service/room.service";
 import {TextLoader} from "@/view/components/text-loader";
+import {RoomWidget} from "@/view/components/room-widget";
 
 export const RoomPage = () => {
     const params = useParams<{ roomId: string }>();
@@ -23,7 +23,7 @@ export const RoomPage = () => {
                     <Show when={roomService()} fallback={<TextLoader/>}>
                         {roomService => (
                             <RoomContext.Provider value={roomService()}>
-                                <RoomCardList/>
+                                <RoomWidget/>
                             </RoomContext.Provider>
                         )}
                     </Show>

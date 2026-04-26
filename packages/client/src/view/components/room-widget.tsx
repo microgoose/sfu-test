@@ -3,7 +3,7 @@ import {RoomCardList} from "@/view/components/room-card-list";
 import {onCleanup, onMount} from "solid-js";
 import {useRoomService} from "@/service/room.service";
 
-export const RoomPage = () => {
+export const RoomWidget = () => {
     const roomService = useRoomService();
 
     onMount(() => {

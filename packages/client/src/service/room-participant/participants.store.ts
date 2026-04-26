@@ -21,7 +21,13 @@ export interface ParticipantMediaTrack {
 export const [participants, setParticipants] = createStore<Participant[]>([]);
 
 export class ParticipantRepository {
+    setParticipants(participants: Participant[]) {
+        setParticipants(participants);
+    }
+
     addParticipant(participant: Participant) {
+        const p = participants.find(p => p.id === participant.id);
+        if (p) return;
         setParticipants(ps => [...ps, participant]);
     }
 

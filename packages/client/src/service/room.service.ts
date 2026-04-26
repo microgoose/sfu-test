@@ -1,9 +1,8 @@
-import {UserService} from "@/service/user.service";
+import {createUserService} from "@/service/user.service";
 import {MediaExchangeService} from "@/service/media-exchange/media-exchange.service";
-import {UserMediaService} from "@/service/user-media/user-media.service";
-import {MediaTransmitterService} from "@/service/media-exchange/media-transmitter.service";
+import {MediaSendService} from "@/service/media-exchange/media-send.service";
 import {MediaReceiverService} from "@/service/media-exchange/media-receiver.service";
-import {ParticipantService} from "@/service/room-participant/participant.service";
+import {createParticipantService} from "@/service/room-participant/participant.service";
 import {createMessagingSocket} from "@/infra/messaging/messaging-client";
 import {ParticipantRepository} from "@/service/room-participant/participants.store";
 import {createContext, useContext} from "solid-js";
@@ -14,30 +13,31 @@ export interface RoomService {
 }
 
 export async function createRoomService(roomId: string): Promise<RoomService> {
-    const socket = await createMessagingSocket();
+    const userService = createUserService();
+    const socket = await createMessagingSocket(userService);
+
     const participantRepository = new ParticipantRepository();
+    const participantService = createParticipantService(socket, userService, participantRepository);
 
-    const userService = new UserService();
-    const roomService = new ParticipantService(socket, userService, participantRepository);
-
-    const userMediaService = new UserMediaService();
-    const transmitterService = new MediaTransmitterService(socket, userService);
+    const transmitterService = new MediaSendService(socket, userService);
     const receiverService = new MediaReceiverService(socket);
     const mediaBroker = new MediaExchangeService(
         socket, transmitterService,
-        receiverService, userMediaService,
+        receiverService,
         participantRepository
     );
 
-    function join() {
-        roomService
-            .join(roomId)
-            .then(() => mediaBroker.open(roomId))
-            .catch(console.error);
+    async function join() {
+        try {
+            await participantService.join(roomId);
+            await mediaBroker.open(roomId);
+        } catch (ex) {
+            console.error(ex);
+        }
     }
 
     function leave() {
-        roomService.leave(roomId);
+        participantService.leave(roomId);
         mediaBroker.close();
     }
 

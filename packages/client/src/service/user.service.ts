@@ -1,10 +1,8 @@
-export class UserService {
-    private readonly id = crypto.randomUUID();
+export type UserService = ReturnType<typeof createUserService>;
 
-    getUser() {
-        return {
-            id: this.id,
-            name: `user-${this.id.slice(0, 4)}`
-        };
-    }
+export function createUserService() {
+    const id = crypto.randomUUID();
+    return {
+        getUser: () => ({ id, name: `user-${id.slice(0, 4)}` })
+    };
 }

@@ -1,4 +1,4 @@
-import {VIDEO_HEIGHT, VIDEO_WIDTH} from "@/domain/media.config";
+import {VIDEO_HEIGHT, VIDEO_WIDTH} from "@/config/media.config";
 
 export interface RandomBallOptions {
     radius: number;
