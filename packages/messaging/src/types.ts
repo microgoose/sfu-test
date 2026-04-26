@@ -11,6 +11,7 @@ export interface  Producer      { producerId: string; participantId: string; kin
 
 // --- Room ---
 export interface  JoinRoomRequest             { roomId: string, participantId: string }
+export interface  JoinRoomResponse            { participants: Participant[] }
 export interface  LeaveRoomRequest            { roomId: string, participantId: string }
 export interface  ParticipantJoinedEvent      { participant: Participant }
 export interface  ParticipantLeftEvent        { participantId: string }

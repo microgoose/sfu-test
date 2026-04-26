@@ -6,11 +6,13 @@ import {resolve} from 'path';
 export default defineConfig({
   plugins: [devtools(), solidPlugin()],
   server: {
+    host: true,
     port: 3000,
+    allowedHosts: true,
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),  // ← добавить
+      '@': resolve(__dirname, './src'),
     },
   },
   build: {

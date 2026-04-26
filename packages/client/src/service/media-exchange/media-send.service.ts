@@ -3,7 +3,7 @@ import {Device} from "mediasoup-client";
 import {UserService} from "@/service/user.service";
 import {MessagingSocket} from "@sfu-test/messaging";
 
-export class MediaTransmitterService {
+export class MediaSendService {
     private readonly signalingMessenger;
     private readonly userService;
     private sendTransport: Transport | null = null;
@@ -36,9 +36,9 @@ export class MediaTransmitterService {
             const request = {roomId, participantId: user.id, transportId: transport.id, kind, rtpParameters};
             this.signalingMessenger
                 .createProducer(request)
-                .then(({ body }) => {
-                    console.debug(`Produce ${kind}, producer ${body.producerId}, transport ${transport.id}`);
-                    callback({id: body.producerId})
+                .then((response) => {
+                    console.debug(`Produce ${kind}, producer ${response.producerId}, transport ${transport.id}`);
+                    callback({id: response.producerId})
                 })
                 .catch(errback);
         });

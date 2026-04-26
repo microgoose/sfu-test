@@ -29,7 +29,7 @@ export async function getRtpCapabilities(roomId: string) {
     return {rtpCapabilities: router.rtpCapabilities};
 }
 
-export async function createTransport(roomId: string) {
+export async function createTransport(participantId: string, roomId: string) {
     const room = getRoomById(roomId);
     const router = getRouterByRoomId(roomId);
     const webRtcServer = getWebRtcServer();
@@ -40,7 +40,7 @@ export async function createTransport(roomId: string) {
         enableTcp: false,
     });
 
-    storage.saveTransport(transport, room.routerId);
+    storage.saveTransport(transport, participantId, room.routerId);
 
     return {
         transportId: transport.id,
@@ -52,13 +52,11 @@ export async function createTransport(roomId: string) {
 }
 
 export async function connectTransport(transportId: string, dtlsParameters: DtlsParameters) {
-    console.debug(`[RoomService] Connect transport ${transportId}`);
     await getTransport(transportId).connect({dtlsParameters});
     return {transportId};
 }
 
 export async function closeTransport(roomId: string, transportId: string) {
-    console.debug(`[RoomService] Close transport ${transportId}`);
     const producers = storage.findProducersByTransport(transportId);
     const transport = getTransport(transportId);
 
@@ -83,7 +81,6 @@ export interface CreateProducerParams {
 }
 
 export async function createProducer(params: CreateProducerParams) {
-    console.debug(`[RoomService] Create producer for transport ${params.transportId}`);
     getRoomById(params.roomId); // guard
     const transport = getTransport(params.transportId);
     const producer = await transport.produce({kind: params.kind, rtpParameters: params.rtpParameters});
@@ -115,7 +112,6 @@ export interface CreateConsumerParams {
 }
 
 export async function createConsumer(params: CreateConsumerParams) {
-    console.debug(`[RoomService] Create consumer for producer ${params.producerId}, transport ${params.transportId}`);
     const transport = getTransport(params.transportId);
     const router = getRouterByTransportId(params.transportId);
 

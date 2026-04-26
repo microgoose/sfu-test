@@ -1,7 +1,7 @@
 import {Device} from "mediasoup-client";
-import {MediaTransmitterService} from "@/service/media-exchange/media-transmitter.service";
+import {MediaSendService} from "@/service/media-exchange/media-send.service";
 import {MediaReceiverService, NewTrackEvent, RemoveTrackEvent} from "@/service/media-exchange/media-receiver.service";
-import {UserMediaService} from "@/service/user-media/user-media.service";
+import {requestAudio, requestVideo} from "@/service/user-media/user-media.service";
 import {MessagingSocket} from "@sfu-test/messaging";
 import {ParticipantRepository} from "@/service/room-participant/participants.store";
 
@@ -10,30 +10,27 @@ export class MediaExchangeService {
     private readonly signalingMessenger;
     private readonly transmitterService;
     private readonly receiverService;
-    private readonly userMediaService;
     private readonly participantStore;
 
     constructor(
         signalingMessenger: MessagingSocket,
-        transmitterService: MediaTransmitterService,
+        transmitterService: MediaSendService,
         receiverService: MediaReceiverService,
-        userMediaService: UserMediaService,
         participantStore: ParticipantRepository,
     ) {
         this.signalingMessenger = signalingMessenger;
         this.receiverService = receiverService;
         this.transmitterService = transmitterService;
-        this.userMediaService = userMediaService;
         this.participantStore = participantStore;
     }
 
     async open(roomId: string) {
         console.debug("Open media exchange");
-        const {body} = await this.signalingMessenger.getRouterRtpCapabilities({ roomId });
-        await this.device.load({routerRtpCapabilities: body.rtpCapabilities});
+        const rtpCapabilitiesResponse = await this.signalingMessenger.getRouterRtpCapabilities({ roomId });
+        await this.device.load({routerRtpCapabilities: rtpCapabilitiesResponse.rtpCapabilities});
 
-        const {body: sendTransportParams} = await this.signalingMessenger.createTransport({ roomId });
-        const {body: localTransportParams} = await this.signalingMessenger.createTransport({ roomId });
+        const sendTransportParams = await this.signalingMessenger.createTransport({ roomId });
+        const localTransportParams = await this.signalingMessenger.createTransport({ roomId });
 
         this.transmitterService.create(roomId, this.device, {
             id: sendTransportParams.transportId,
@@ -52,10 +49,7 @@ export class MediaExchangeService {
         this.receiverService.onNewTrack((event) => this.handleNewTrack(event));
         this.receiverService.onRemoveTrack((event) => this.handleRemoveTrack(event));
 
-        const [audioTrack, videoTrack] = await Promise.all([
-            this.userMediaService.requestAudio(),
-            this.userMediaService.requestVideo(),
-        ]);
+        const [audioTrack, videoTrack] = await Promise.all([requestAudio(), requestVideo()]);
 
         // TODO video optional
         await this.transmitterService.send(audioTrack);

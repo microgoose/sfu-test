@@ -1,12 +1,13 @@
 import {MessagingExchanger, MessagingRouter, MessagingSocket} from "@sfu-test/messaging";
 import {getMessage} from "@/service/error.service";
+import {UserService} from "@/service/user.service";
 
-export function createMessagingSocket(): Promise<MessagingSocket> {
+export function createMessagingSocket(userService: UserService): Promise<MessagingSocket> {
     return new Promise((resolve, reject) => {
         let ws;
 
         try {
-            ws = new WebSocket('ws://localhost:15674?userId=' + crypto.randomUUID());
+            ws = new WebSocket('ws://localhost:15674?userId=' + userService.getUser().id);
         } catch (err) {
             reject(new Error(`Failed to create WebSocket: ${getMessage(err)}`));
             return;
@@ -38,7 +39,9 @@ export function createMessagingSocket(): Promise<MessagingSocket> {
                 });
 
                 ws.onmessage = (event) => {
-                    exchanger.handleIncomingMessage(event.data.toString());
+                    exchanger
+                        .handleIncomingMessage(event.data.toString())
+                        .catch(console.error);
                 };
 
                 resolve(new MessagingSocket(exchanger));

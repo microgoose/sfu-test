@@ -1,43 +1,40 @@
-import {UserService} from "@/service/user.service";
 import {MessagingSocket} from "@sfu-test/messaging";
 import {ParticipantRepository} from "@/service/room-participant/participants.store";
+import {UserService} from "@/service/user.service";
 
-export class ParticipantService {
-    private readonly roomMessenger;
-    private readonly userService;
-    private readonly participantStore;
-
-    constructor(roomMessenger: MessagingSocket, userService: UserService, participantStore: ParticipantRepository) {
-        this.roomMessenger = roomMessenger;
-        this.userService = userService;
-        this.participantStore = participantStore;
-    }
-
-    async join(roomId: string) {
+export function createParticipantService(
+    roomMessenger: MessagingSocket,
+    userService: UserService,
+    participantRepository: ParticipantRepository
+) {
+    async function join(roomId: string) {
         console.debug('Add user to room');
 
-        this.roomMessenger.onParticipantJoined(async ({ body }) => {
-            console.debug(`Participant joined ${body.participant.id}`);
-            this.participantStore.addParticipant(body.participant);
+        roomMessenger.onParticipantJoined((event) => {
+            console.debug(`Participant joined ${event.participant.id}`);
+            participantRepository.addParticipant(event.participant);
         });
 
-        this.roomMessenger.onParticipantLeft(async ({ body }) => {
-            console.debug(`Participant left ${body.participantId}`);
-            this.participantStore.removeParticipant(body.participantId);
+        roomMessenger.onParticipantLeft((event) => {
+            console.debug(`Participant left ${event.participantId}`);
+            participantRepository.removeParticipant(event.participantId);
         });
 
-        const user = this.userService.getUser();
-        await this.roomMessenger.joinRoom({ roomId, participantId: user.id });
+        const user = userService.getUser();
+        const roomState = await roomMessenger.joinRoom({ roomId, participantId: user.id });
+        participantRepository.setParticipants(roomState.participants);
     }
 
-    leave(roomId: string) {
+    function leave(roomId: string) {
         console.debug('Remove user from room');
 
-        this.participantStore.clearParticipants();
-        this.roomMessenger.onParticipantJoined(async () => {});
-        this.roomMessenger.onParticipantLeft(async () => {});
+        participantRepository.clearParticipants();
+        roomMessenger.onParticipantJoined(async () => {});
+        roomMessenger.onParticipantLeft(async () => {});
 
-        const user = this.userService.getUser();
-        this.roomMessenger.leaveRoom({ roomId, participantId: user.id });
+        const user = userService.getUser();
+        roomMessenger.leaveRoom({ roomId, participantId: user.id });
     }
+
+    return { join, leave };
 }

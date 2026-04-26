@@ -1,6 +1,6 @@
 import {ParticipantVideo} from "@/view/components/participant-video";
 import {ParticipantAudio} from "@/view/components/participant-audio";
-import {Participant} from "@/service/participants.store";
+import {Participant} from "@/service/room-participant/participants.store";
 
 interface RoomCardProps {
     participant: Participant

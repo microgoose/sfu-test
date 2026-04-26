@@ -1,4 +1,4 @@
-import {joinRoom, leaveRoom} from "@/service/room.service.js";
+import {joinRoom, leaveAllRooms, leaveRoom} from "@/service/room.service.js";
 import {WebSocketServer} from "ws";
 import {MessagingExchanger, MessagingRouter, MessagingSocket} from "@sfu-test/messaging";
 import {
@@ -49,6 +49,7 @@ export function createMessagingServer(wss: WebSocketServer) {
 
         ws.on('close', () => {
             console.debug(`[Messaging] Participant ${userId} disconnected`);
+            leaveAllRooms(userId);
             sockets.delete(userId);
         });
 
@@ -56,49 +57,49 @@ export function createMessagingServer(wss: WebSocketServer) {
             exchanger.handleIncomingMessage(data.toString());
         });
 
-        socket.onJoinRoom(async ({ body }) => {
-            console.debug(`[Messaging] Participant ${userId} join room ${body.roomId}`);
-            joinRoom(userId, body.roomId);
+        socket.onJoinRoom((request) => {
+            console.debug(`[Messaging] Participant ${userId} join room ${request.roomId}`);
+            return joinRoom(userId, request.roomId);
         });
 
-        socket.onLeaveRoom(async ({body}) => {
-            console.debug(`[Messaging] Participant ${userId} leaving room ${body.roomId}`);
-            leaveRoom(userId, body.roomId);
+        socket.onLeaveRoom((request) => {
+            console.debug(`[Messaging] Participant ${userId} leaving room ${request.roomId}`);
+            leaveRoom(userId, request.roomId);
         });
 
-        socket.onGetRouterRtpCapabilities(({body}) => {
-            console.debug(`[Messaging] Get rtp capabilities ${body.roomId}`);
-            return getRtpCapabilities(body.roomId);
+        socket.onGetRouterRtpCapabilities((request) => {
+            console.debug(`[Messaging] Get rtp capabilities ${request.roomId}`);
+            return getRtpCapabilities(request.roomId);
         });
 
-        socket.onCreateTransport(({body}) => {
-            console.debug(`[Messaging] Create transport for room ${body.roomId}`);
-            return createTransport(body.roomId);
+        socket.onCreateTransport((request) => {
+            console.debug(`[Messaging] Create transport for room ${request.roomId}`);
+            return createTransport(userId, request.roomId);
         });
 
-        socket.onConnectTransport(({body}) => {
-            console.debug(`[Messaging] Connect transport ${body.transportId} from room ${body.roomId}`);
-            return connectTransport(body.transportId, body.dtlsParameters);
+        socket.onConnectTransport((request) => {
+            console.debug(`[Messaging] Connect transport ${request.transportId} from room ${request.roomId}`);
+            return connectTransport(request.transportId, request.dtlsParameters);
         });
 
-        socket.onCreateProducer(async ({body}) => {
-            console.debug(`[Messaging] Create producer for transport ${body.transportId}, kind ${body.kind}`);
-            return createProducer(body);
+        socket.onCreateProducer((request) => {
+            console.debug(`[Messaging] Create producer for transport ${request.transportId}, kind ${request.kind}`);
+            return createProducer(request);
         });
 
-        socket.onGetProducersList(async ({body}) => {
-            console.debug(`[Messaging] Get room ${body.roomId} producers`);
-            return getRoomProducers(body.roomId);
+        socket.onGetProducersList((request) => {
+            console.debug(`[Messaging] Get room ${request.roomId} producers`);
+            return getRoomProducers(request.roomId);
         });
 
-        socket.onCreateConsumer(({body}) => {
-            console.debug(`[Messaging] Create consumer for transport ${body.transportId}, producer ${body.producerId}`);
-            return createConsumer(body);
+        socket.onCreateConsumer((request) => {
+            console.debug(`[Messaging] Create consumer for transport ${request.transportId}, producer ${request.producerId}`);
+            return createConsumer(request);
         });
 
-        socket.onResumeConsumer(async ({body}) => {
-            console.debug(`[Messaging] Resume consumer ${body.consumerId}`);
-            resumeConsumer(body.consumerId);
+        socket.onResumeConsumer((request) => {
+            console.debug(`[Messaging] Resume consumer ${request.consumerId}`);
+            resumeConsumer(request.consumerId);
         });
 
         sockets.set(userId, socket);
