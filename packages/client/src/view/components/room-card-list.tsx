@@ -1,18 +1,12 @@
 import {For} from "solid-js";
 import {RoomCard} from "@/view/components/room-card";
-import {Participant} from "@/domain/model";
+import {participants} from "@/service/room-participant/participants.store";
 
-interface RoomCardListProps {
-    participants: Participant[]
-}
-
-export function RoomCardList(props: RoomCardListProps) {
+export function RoomCardList() {
     return (
         <div class="room-card-grid">
-            <For each={props.participants}>
-                {(participant) => (
-                    <RoomCard participant={participant}/>
-                )}
+            <For each={participants}>
+                {(participant) => <RoomCard participant={participant}/>}
             </For>
         </div>
     );

@@ -24,11 +24,15 @@ export function publishNewProducer(roomId: string, event: NewProducerEvent) {
     broadcastToRoom(roomId, (s) => s.publishNewProducer(event));
 }
 
-function broadcastToRoom(roomId: string, callback: (socket: MessagingSocket) => void) {
+function broadcastToRoom(roomId: string, callback: (socket: MessagingSocket) => Promise<unknown>) {
     const participants = storage.findParticipantsByRoomId(roomId);
     for (let participant of participants) {
         const socket = sockets.get(participant.id);
-        if (!socket) return console.warn(`Socket ${participant.id} not found`);
-        callback(socket);
+        if (!socket) {
+            console.warn(`[Messaging Serice] Socket ${participant.id} not found`);
+            continue;
+        }
+
+        callback(socket).catch(console.error);
     }
 }

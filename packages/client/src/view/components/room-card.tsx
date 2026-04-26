@@ -1,5 +1,6 @@
-import {Participant} from "@/domain/model";
-import {VideoCard} from "@/view/components/video-card";
+import {ParticipantVideo} from "@/view/components/participant-video";
+import {ParticipantAudio} from "@/view/components/participant-audio";
+import {Participant} from "@/service/participants.store";
 
 interface RoomCardProps {
     participant: Participant
@@ -8,7 +9,8 @@ interface RoomCardProps {
 export const RoomCard = (props: RoomCardProps) => {
     return (
         <article class="room-card">
-            <VideoCard participant={props.participant}/>
+            <ParticipantVideo participant={props.participant}/>
+            <ParticipantAudio audioTrack={props.participant.audioTrack}/>
             <span class="room-card-label">{props.participant.name}</span>
         </article>
     );

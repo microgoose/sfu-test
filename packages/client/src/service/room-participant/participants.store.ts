@@ -1,56 +1,49 @@
 import {createStore} from "solid-js/store";
-import {Participant} from "@/domain/model";
 import {MediaKind} from "mediasoup-client/types";
 
-interface ParticipantsStore {
-    participants: Participant[];
+export interface User {
+    id: string;
+    name: string;
 }
 
-const [store, setState] = createStore<ParticipantsStore>({
-    participants: [],
-});
-
-export const participantStore = store;
-
-export function clearParticipants() {
-    setState('participants', []);
+export interface Participant extends User {
+    videoTrack?: MediaStreamTrack;
+    audioTrack?: MediaStreamTrack;
 }
 
-export function addParticipant(participant: Participant) {
-    setState('participants', participants => ([
-        ...participants,
-        participant
-    ]));
+export interface ParticipantMediaTrack {
+    participantId: string;
+    producerId: string;
+    kind: MediaKind;
+    track: MediaStreamTrack;
 }
 
-export function removeParticipant(participantId: string) {
-    setState('participants', participants =>
-        participants.filter((p) => p.id !== participantId)
-    );
-}
+export const [participants, setParticipants] = createStore<Participant[]>([]);
 
-export function setTrack(participantId: string, track: MediaStreamTrack) {
-    switch (track.kind) {
-        case "audio":
-            setState('participants', (p) => p.id === participantId, 'audioTrack', track);
-            break;
-        case "video":
-            setState('participants', (p) => p.id === participantId, 'videoTrack', track);
-            break;
-        default:
-            throw new Error('Unknown media kind');
+export class ParticipantRepository {
+    addParticipant(participant: Participant) {
+        setParticipants(ps => [...ps, participant]);
     }
-}
 
-export function resetTrack(participantId: string, kind: MediaKind) {
-    switch (kind) {
-        case "audio":
-            setState('participants', (p) => p.id === participantId, 'audioTrack', undefined);
-            break;
-        case "video":
-            setState('participants', (p) => p.id === participantId, 'videoTrack', undefined);
-            break;
-        default:
-            throw new Error('Unknown media kind');
+    removeParticipant(participantId: string) {
+        setParticipants(ps => ps.filter(p => p.id !== participantId));
+    }
+
+    setTrack(participantId: string, track: MediaStreamTrack) {
+        setParticipants(
+            p => p.id === participantId,
+            track.kind === 'audio' ? 'audioTrack' : 'videoTrack', track
+        );
+    }
+
+    resetTrack(participantId: string, kind: MediaKind) {
+        setParticipants(
+            p => p.id === participantId,
+            kind === 'audio' ? 'audioTrack' : 'videoTrack', undefined
+        );
+    }
+
+    clearParticipants() {
+        setParticipants([]);
     }
 }

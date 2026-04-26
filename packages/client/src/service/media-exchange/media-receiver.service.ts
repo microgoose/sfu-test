@@ -1,7 +1,7 @@
 import {Consumer, MediaKind, RtpCapabilities, Transport, TransportOptions} from "mediasoup-client/types";
 import {Device} from "mediasoup-client";
-import {ParticipantMediaTrack} from "@/domain/model";
 import {CloseProducersEvent, MessagingSocket, NewProducerEvent, ProducerListResponse} from "@sfu-test/messaging";
+import {ParticipantMediaTrack} from "@/service/room-participant/participants.store";
 
 export type NewTrackEvent = {participantId: string; producerId: string; kind: MediaKind; track: MediaStreamTrack};
 export type NewTrackHandler = (event: NewTrackEvent) => void;
@@ -42,7 +42,7 @@ export class MediaReceiverService {
         this.signalingMessenger
             .onNewProducer(({body}) => this.handleNewProducer(body));
         this.signalingMessenger
-            .onCloseProducers(({body}) => this.handleRemoveProducers(body));
+            .onCloseProducers(async ({body}) => this.handleRemoveProducers(body));
     }
 
     close() {

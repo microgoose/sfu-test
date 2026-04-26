@@ -2,8 +2,8 @@ import {Device} from "mediasoup-client";
 import {MediaTransmitterService} from "@/service/media-exchange/media-transmitter.service";
 import {MediaReceiverService, NewTrackEvent, RemoveTrackEvent} from "@/service/media-exchange/media-receiver.service";
 import {UserMediaService} from "@/service/user-media/user-media.service";
-import {resetTrack, setTrack} from "@/service/room-participant/participants.store";
 import {MessagingSocket} from "@sfu-test/messaging";
+import {ParticipantRepository} from "@/service/room-participant/participants.store";
 
 export class MediaExchangeService {
     private readonly device = new Device();
@@ -11,23 +11,26 @@ export class MediaExchangeService {
     private readonly transmitterService;
     private readonly receiverService;
     private readonly userMediaService;
+    private readonly participantStore;
 
     constructor(
         signalingMessenger: MessagingSocket,
         transmitterService: MediaTransmitterService,
         receiverService: MediaReceiverService,
         userMediaService: UserMediaService,
+        participantStore: ParticipantRepository,
     ) {
         this.signalingMessenger = signalingMessenger;
         this.receiverService = receiverService;
         this.transmitterService = transmitterService;
         this.userMediaService = userMediaService;
+        this.participantStore = participantStore;
     }
 
     async open(roomId: string) {
         console.debug("Open media exchange");
-        const {body: routerRtpCapabilities} = await this.signalingMessenger.getRouterRtpCapabilities({ roomId });
-        await this.device.load({routerRtpCapabilities});
+        const {body} = await this.signalingMessenger.getRouterRtpCapabilities({ roomId });
+        await this.device.load({routerRtpCapabilities: body.rtpCapabilities});
 
         const {body: sendTransportParams} = await this.signalingMessenger.createTransport({ roomId });
         const {body: localTransportParams} = await this.signalingMessenger.createTransport({ roomId });
@@ -69,11 +72,11 @@ export class MediaExchangeService {
 
     private handleNewTrack(event: NewTrackEvent) {
         console.log('New track', event);
-        setTrack(event.participantId, event.track);
+        this.participantStore.setTrack(event.participantId, event.track);
     }
 
     private handleRemoveTrack(event: RemoveTrackEvent) {
         console.log('Remove track', event.producerId);
-        resetTrack(event.participantId, event.kind);
+        this.participantStore.resetTrack(event.participantId, event.kind);
     }
 }

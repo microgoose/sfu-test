@@ -99,7 +99,6 @@ export async function createProducer(params: CreateProducerParams) {
 }
 
 export function getRoomProducers(roomId: string) {
-    console.debug(`[RoomService] Get room producers for room ${roomId}`);
     return {
         producers: storage.findProducersByRoom(roomId).map(({producer, participantId}) => ({
             producerId: producer.id,

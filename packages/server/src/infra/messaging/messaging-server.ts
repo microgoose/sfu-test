@@ -42,7 +42,7 @@ export function createMessagingServer(wss: WebSocketServer) {
         const exchanger = new MessagingExchanger({
             router,
             onErrorMessage: console.error,
-            onSend: ws.send,
+            onSend: (data) => ws.send(data),
         });
 
         const socket = new MessagingSocket(exchanger);

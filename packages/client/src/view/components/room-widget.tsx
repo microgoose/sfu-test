@@ -1,32 +1,20 @@
 import '../assets/css/room.css';
 import {RoomCardList} from "@/view/components/room-card-list";
-import {participantStore} from "@/service/room-participant/participants.store";
-import {RoomService} from "@/service/room.service";
 import {onCleanup, onMount} from "solid-js";
+import {useRoomService} from "@/service/room.service";
 
-interface RoomWidgetProps {
-    roomService: RoomService
-}
-
-export const RoomWidget = (props: RoomWidgetProps) => {
-    function join() {
-        props.roomService.join().catch(console.error);
-    }
-
-    function leave() {
-        props.roomService.leave().catch(console.error);
-    }
+export const RoomPage = () => {
+    const roomService = useRoomService();
 
     onMount(() => {
-        window.addEventListener('pagehide', leave);
+        window.addEventListener('pagehide', roomService.leave);
+        roomService.join();
     });
 
     onCleanup(() => {
-        window.removeEventListener('pagehide', leave);
-        leave();
+        window.removeEventListener('pagehide', roomService.leave);
+        roomService.leave();
     });
 
-    join();
-
-    return <RoomCardList participants={participantStore.participants}/>;
+    return <RoomCardList/>;
 };

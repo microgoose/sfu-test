@@ -1,27 +1,29 @@
 import {UserService} from "@/service/user.service";
-import {addParticipant, clearParticipants, removeParticipant} from "@/service/room-participant/participants.store";
 import {MessagingSocket} from "@sfu-test/messaging";
+import {ParticipantRepository} from "@/service/room-participant/participants.store";
 
 export class ParticipantService {
     private readonly roomMessenger;
     private readonly userService;
+    private readonly participantStore;
 
-    constructor(roomMessenger: MessagingSocket, userService: UserService) {
+    constructor(roomMessenger: MessagingSocket, userService: UserService, participantStore: ParticipantRepository) {
         this.roomMessenger = roomMessenger;
         this.userService = userService;
+        this.participantStore = participantStore;
     }
 
     async join(roomId: string) {
         console.debug('Add user to room');
 
-        this.roomMessenger.onParticipantJoined(({ body }) => {
+        this.roomMessenger.onParticipantJoined(async ({ body }) => {
             console.debug(`Participant joined ${body.participant.id}`);
-            addParticipant(body.participant);
+            this.participantStore.addParticipant(body.participant);
         });
 
-        this.roomMessenger.onParticipantLeft(({ body }) => {
+        this.roomMessenger.onParticipantLeft(async ({ body }) => {
             console.debug(`Participant left ${body.participantId}`);
-            removeParticipant(body.participantId);
+            this.participantStore.removeParticipant(body.participantId);
         });
 
         const user = this.userService.getUser();
@@ -31,9 +33,9 @@ export class ParticipantService {
     leave(roomId: string) {
         console.debug('Remove user from room');
 
-        clearParticipants();
-        this.roomMessenger.onParticipantJoined(() => {});
-        this.roomMessenger.onParticipantLeft(() => {});
+        this.participantStore.clearParticipants();
+        this.roomMessenger.onParticipantJoined(async () => {});
+        this.roomMessenger.onParticipantLeft(async () => {});
 
         const user = this.userService.getUser();
         this.roomMessenger.leaveRoom({ roomId, participantId: user.id });

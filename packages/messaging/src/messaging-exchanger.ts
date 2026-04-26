@@ -34,11 +34,16 @@ export class MessagingExchanger {
         const id = crypto.randomUUID();
         const request = new RequestMessage(destination, id, body);
         return new Promise((resolve, reject) => {
-            this.onSend(JSON.stringify(request));
+            try {
+                this.onSend(JSON.stringify(request));
+            } catch (ex) {
+                reject(ex);
+                return;
+            }
 
             const timer = setTimeout(() => {
                 this.pendingResponses.delete(id);
-                reject(new Error('Request timed out'))
+                reject(new Error(`Request time out ${destination}`))
             }, this.timeout);
 
             this.pendingResponses.set(id, {

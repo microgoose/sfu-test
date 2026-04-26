@@ -1,5 +1,5 @@
 import {createCanvasAnimation} from "@/service/user-media/canvas-animation";
-import {VIDEO_FRAMERATE, VIDEO_HEIGHT, VIDEO_WIDTH} from "@/domain/media.config";
+import {VIDEO_FRAMERATE, VIDEO_HEIGHT, VIDEO_WIDTH} from "@/config/media.config";
 
 export class UserMediaService {
 

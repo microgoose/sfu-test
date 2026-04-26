@@ -1,15 +1,15 @@
 import '../assets/css/room.css';
 import {useParams} from "@solidjs/router";
+import {RoomCardList} from "@/view/components/room-card-list";
 import {createResource, Show} from "solid-js";
-import {createRoomService} from "@/service/room.service";
-import {RoomWidget} from "@/view/components/room-widget";
+import {createRoomService, RoomContext} from "@/service/room.service";
 import {TextLoader} from "@/view/components/text-loader";
 
 export const RoomPage = () => {
     const params = useParams<{ roomId: string }>();
     const [roomService] = createResource(
-        params.roomId,
-        (roomId) => createRoomService(roomId)
+        () => params.roomId,
+        roomId => createRoomService(roomId)
     );
 
     return (
@@ -21,7 +21,11 @@ export const RoomPage = () => {
                 </header>
                 <div class="terminal-body">
                     <Show when={roomService()} fallback={<TextLoader/>}>
-                        {rs => <RoomWidget roomService={rs()}/> }
+                        {roomService => (
+                            <RoomContext.Provider value={roomService()}>
+                                <RoomCardList/>
+                            </RoomContext.Provider>
+                        )}
                     </Show>
                 </div>
             </section>

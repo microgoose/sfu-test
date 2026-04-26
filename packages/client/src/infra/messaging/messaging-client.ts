@@ -37,6 +37,10 @@ export function createMessagingSocket(): Promise<MessagingSocket> {
                     onSend: (data) => ws.send(data),
                 });
 
+                ws.onmessage = (event) => {
+                    exchanger.handleIncomingMessage(event.data.toString());
+                };
+
                 resolve(new MessagingSocket(exchanger));
             } catch (err) {
                 ws.close();
